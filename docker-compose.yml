@@ -1,0 +1,8 @@
+services:
+  vulcan:
+    container_name: vulcan_container
+    image: vulcan_image
+    build: .
+    volumes:
+      - /dev:/dev
+    privileged: true
