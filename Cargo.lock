@@ -42,6 +42,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "asm-delay"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9a69a963b70ddacfcd382524f72a4576f359af9334b3bf48a79566590bb8bfa"
+dependencies = [
+ "bitrate",
+ "cortex-m 0.7.3",
+ "embedded-hal",
+]
+
+[[package]]
 name = "atomic-polyfill"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -89,6 +100,12 @@ name = "bitfield"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
+
+[[package]]
+name = "bitrate"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c147d86912d04bef727828fda769a76ca81629a46d8ba311a8d58a26aa91473d"
 
 [[package]]
 name = "byte-slice-cast"
@@ -302,6 +319,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-layout"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7adbc16ba694006a121bce08a8935186d16cb008a4c9e20c5e346517ad1e0ac8"
+dependencies = [
+ "embedded-graphics",
+ "embedded-layout-macros",
+]
+
+[[package]]
+name = "embedded-layout-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "352186cee85e4cf9104c42b4dfd0295a22901c5d2bf0c26efd47265adcf1c52d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "embedded-time"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -383,6 +421,15 @@ checksum = "bc633605454125dec4b66843673f01c7df2b89479b32e0ed634e43a91cff62a5"
 dependencies = [
  "autocfg",
  "hashbrown",
+]
+
+[[package]]
+name = "keypad2"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c416496685616aea1e8f9aa4e5958cf6f3bb44395239725c6e9ea511997036f4"
+dependencies = [
+ "embedded-hal",
 ]
 
 [[package]]
@@ -733,6 +780,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "systick-monotonic"
+version = "0.1.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf4d3a704fd63e177a8dc1aebc5f6b4bc773c5517ffd2d8ef1321915508af0c3"
+dependencies = [
+ "cortex-m 0.7.3",
+ "rtic-monotonic",
+]
+
+[[package]]
 name = "typenum"
 version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -782,6 +839,7 @@ name = "vulcan"
 version = "0.1.0"
 dependencies = [
  "arducam_stm32",
+ "asm-delay",
  "cortex-m 0.7.3",
  "cortex-m-rtic",
  "defmt",
@@ -791,10 +849,13 @@ dependencies = [
  "dwt-systick-monotonic",
  "embedded-graphics",
  "embedded-hal",
+ "embedded-layout",
  "heapless",
+ "keypad2",
  "nb 1.0.0",
  "panic-probe",
  "rtic-monotonic",
  "st7789",
  "stm32f4xx-hal",
+ "systick-monotonic",
 ]
