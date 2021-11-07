@@ -1,5 +1,5 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-runner = "probe-run --chip STM32F411CEUx"
+runner = "probe-run --chip STM32H743VITx"
 rustflags = [
   "-C",
   "linker=flip-link",

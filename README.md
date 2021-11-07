@@ -2,7 +2,7 @@
 
 an embedded signing device.
 
-First attempt using the STM32F411 with the ArduCAM SPI OV5642.
+Second attempt using the STM32H7 with the OV2640 over the built in DCIM.
 
 ### Prerequisites
 If you're on linux, make sure to install the necessary ST-Link udev rules from [probe.rs](https://probe.rs/docs/getting-started/probe-setup/).

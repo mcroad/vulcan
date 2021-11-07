@@ -1,6 +1,6 @@
 use crate::types::Keys;
 use embedded_hal::blocking::delay::DelayMs;
-pub use stm32f4xx_hal::delay::Delay;
+pub use stm32h7xx_hal::delay::Delay;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Key {
@@ -133,7 +133,7 @@ impl defmt::Format for Key {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Button {
   Zero,
   One,

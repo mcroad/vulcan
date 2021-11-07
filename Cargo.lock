@@ -21,15 +21,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arducam_stm32"
-version = "0.1.0"
-dependencies = [
- "defmt",
- "embedded-hal",
- "nb 1.0.0",
-]
-
-[[package]]
 name = "as-slice"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -133,6 +124,16 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "num-integer",
+ "num-traits",
+]
 
 [[package]]
 name = "cortex-m"
@@ -283,6 +284,15 @@ checksum = "ee24005155537a6215c1a32fe2e3438133aed9c4688b2924d03353fdce1ef41a"
 dependencies = [
  "cortex-m 0.7.3",
  "rtic-monotonic",
+]
+
+[[package]]
+name = "embedded-dma"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46c8c02e4347a0267ca60813c952017f4c5948c232474c6010a381a337f1bda4"
+dependencies = [
+ "stable_deref_trait",
 ]
 
 [[package]]
@@ -548,6 +558,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acbf547ad0c65e31259204bd90935776d1c693cec2f4ff7abb7a1bbbd40dfe58"
+
+[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -594,12 +610,6 @@ name = "r0"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2a38df5b15c8d5c7e8654189744d8e396bddc18ad48041a500ce52d6948941f"
-
-[[package]]
-name = "rand_core"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
 
 [[package]]
 name = "regex"
@@ -740,31 +750,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
-name = "stm32f4"
-version = "0.11.0"
+name = "stm32h7"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11460b4de3a84f072e2cf6e76306c64d27f405a0e83bace0a726f555ddf4bf33"
+checksum = "8b672c837e0ee8158ecc7fce0f9a948dd0693a9c588338e728d14b73307a0b7d"
 dependencies = [
  "bare-metal 0.2.5",
- "cortex-m 0.6.7",
+ "cortex-m 0.7.3",
  "cortex-m-rt",
  "vcell",
 ]
 
 [[package]]
-name = "stm32f4xx-hal"
-version = "0.8.3"
+name = "stm32h7xx-hal"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3a2f044469d1e3aff2cd02bee8b2724f3d5d91f3175e5d1ec99770320d16192"
+checksum = "6af6500f1f12aa81c305f20589fc6615f92b1e3a23644326eb77686b94769049"
 dependencies = [
- "bare-metal 0.2.5",
+ "bare-metal 1.0.0",
  "cast",
- "cortex-m 0.6.7",
+ "chrono",
+ "cortex-m 0.7.3",
  "cortex-m-rt",
+ "embedded-dma",
  "embedded-hal",
- "nb 0.1.3",
- "rand_core",
- "stm32f4",
+ "nb 1.0.0",
+ "paste",
+ "stm32h7",
  "void",
 ]
 
@@ -838,7 +850,6 @@ dependencies = [
 name = "vulcan"
 version = "0.1.0"
 dependencies = [
- "arducam_stm32",
  "asm-delay",
  "cortex-m 0.7.3",
  "cortex-m-rtic",
@@ -856,6 +867,6 @@ dependencies = [
  "panic-probe",
  "rtic-monotonic",
  "st7789",
- "stm32f4xx-hal",
+ "stm32h7xx-hal",
  "systick-monotonic",
 ]
