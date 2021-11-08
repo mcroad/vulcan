@@ -174,7 +174,7 @@ mod app {
     update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
     render_task::spawn().unwrap();
 
-    delay.delay_ms(2000u16);
+    delay.delay_ms(4000u16);
 
     update_task::spawn(Msg::Navigate(Screen::Home)).unwrap();
     render_task::spawn().unwrap();
@@ -183,7 +183,7 @@ mod app {
 
     loop {
       if let Err(_err) = render_task::spawn() {
-        defmt::info!("error rendering in loop");
+        defmt::error!("error rendering in loop");
       }
 
       delay.delay_ms(30u16);
@@ -304,12 +304,12 @@ mod app {
     keypad_task::spawn_after(50.milliseconds()).unwrap();
   }
 
-  fn clear_screen(display: &mut Display, backlight: &mut BacklightLED) {
-    backlight.set_low().unwrap();
-    display.clear(Rgb565::BLACK).unwrap();
+  fn clear_screen(_display: &mut Display, _backlight: &mut BacklightLED) {
+    // backlight.set_low().unwrap();
+    // display.clear(Rgb565::BLACK).unwrap();
   }
-  fn show_screen(backlight: &mut BacklightLED) {
-    backlight.set_high().unwrap();
+  fn show_screen(_backlight: &mut BacklightLED) {
+    // backlight.set_high().unwrap();
   }
 
   #[task(priority = 2, shared = [state, should_render] , local = [display, backlight])]
@@ -322,10 +322,11 @@ mod app {
 
     (should_render, state).lock(|should_render, state| {
       if *should_render {
+        defmt::info!("render");
+
         clear_screen(display, backlight);
 
-        defmt::info!("render");
-        view(display, &state);
+        view(display, &state).unwrap();
 
         show_screen(backlight);
 
