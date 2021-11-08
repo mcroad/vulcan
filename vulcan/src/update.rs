@@ -1,6 +1,6 @@
 use crate::{
+  keypad::Key,
   types::{Msg, State},
-  util::Key,
 };
 
 pub fn update(state: &mut State, msg: Msg) {
@@ -8,7 +8,7 @@ pub fn update(state: &mut State, msg: Msg) {
     Msg::Navigate(screen) => {
       state.screen = screen;
     }
-    Msg::Type(key) => match key {
+    Msg::KeyUp(key) => match key {
       Key::Back => {
         let len = state.msg.len();
         if len > 0 {

@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-#![deny(unused_imports)]
 #![deny(unsafe_code)]
 #![deny(warnings)]
 
@@ -25,6 +24,7 @@ defmt::timestamp!("{=usize}", {
 });
 
 mod home;
+mod keypad;
 mod splash;
 mod types;
 mod update;
@@ -33,9 +33,9 @@ mod view;
 
 #[rtic::app(device = stm32h7xx_hal::stm32, peripherals = true, dispatchers = [USART1, USART2, EXTI0])]
 mod app {
-  use crate::types::{BacklightLED, ButtonEvent, Display, KeypadMode, Keys, Msg, Screen, State};
+  use crate::keypad::{self, EventBufferUtil, KeypadRead};
+  use crate::types::{BacklightLED, Display, KeypadMode, Msg, Screen, State};
   use crate::update::update;
-  use crate::util::{Button, Key, KeypadRead};
   use crate::view::view;
   use asm_delay::{bitrate, AsmDelay};
   use display_interface_spi::SPIInterface;
@@ -56,7 +56,7 @@ mod app {
   struct Shared {
     should_render: bool,
     state: State,
-    keypad: Keys,
+    keypad: keypad::Keys,
   }
 
   #[local]
@@ -65,7 +65,7 @@ mod app {
     delay2: AsmDelay,
     display: Display,
     backlight: BacklightLED,
-    last_buttons: [ButtonEvent; 20],
+    event_buffer: Option<keypad::EventBuffer>,
   }
 
   #[init]
@@ -144,7 +144,6 @@ mod app {
       Keypad::new(rows, cols)
     };
 
-    let now = monotonics::now();
     defmt::info!("INIT DONE");
 
     (
@@ -162,7 +161,7 @@ mod app {
         backlight,
         delay,
         delay2: AsmDelay::new(bitrate::MegaHertz(100)),
-        last_buttons: [ButtonEvent { button: None, now }; 20],
+        event_buffer: None,
       },
       init::Monotonics(mono),
     )
@@ -180,7 +179,7 @@ mod app {
     update_task::spawn(Msg::Navigate(Screen::Home)).unwrap();
     render_task::spawn().unwrap();
 
-    keypad_task::spawn().unwrap();
+    keypad_task::spawn_after(1000.milliseconds()).unwrap();
 
     loop {
       if let Err(_err) = render_task::spawn() {
@@ -191,95 +190,10 @@ mod app {
     }
   }
 
-  struct ButtonKeyMap {
-    two: [Key; 3],
-    three: [Key; 3],
-    four: [Key; 3],
-    five: [Key; 3],
-    six: [Key; 3],
-    seven: [Key; 4],
-    eight: [Key; 3],
-    nine: [Key; 4],
-  }
-
-  static BUTTON_KEY_MAP: ButtonKeyMap = ButtonKeyMap {
-    two: [Key::A, Key::B, Key::C],
-    three: [Key::D, Key::E, Key::F],
-    four: [Key::G, Key::H, Key::I],
-    five: [Key::J, Key::K, Key::L],
-    six: [Key::M, Key::N, Key::O],
-    seven: [Key::P, Key::Q, Key::R, Key::S],
-    eight: [Key::T, Key::U, Key::V],
-    nine: [Key::W, Key::X, Key::Y, Key::Z],
-  };
-
-  fn button_to_key(button: Button, times_pressed: usize) -> Option<Key> {
-    if times_pressed < 1 {
-      panic!("button_to_key: times_pressed out of range");
-    }
-    if button == Button::Seven || button == Button::Nine {
-      if times_pressed > 4 {
-        panic!("button_to_key: times_pressed out of range");
-      }
-    } else if times_pressed > 3 {
-      panic!("button_to_key: times_pressed out of range");
-    }
-
-    match button {
-      Button::Zero => None,
-      Button::One => None,
-      Button::Two => Some(BUTTON_KEY_MAP.two[times_pressed]),
-      Button::Three => Some(BUTTON_KEY_MAP.three[times_pressed]),
-      Button::Four => Some(BUTTON_KEY_MAP.four[times_pressed]),
-      Button::Five => Some(BUTTON_KEY_MAP.five[times_pressed]),
-      Button::Six => Some(BUTTON_KEY_MAP.six[times_pressed]),
-      Button::Seven => Some(BUTTON_KEY_MAP.seven[times_pressed]),
-      Button::Eight => Some(BUTTON_KEY_MAP.eight[times_pressed]),
-      Button::Nine => Some(BUTTON_KEY_MAP.nine[times_pressed]),
-      Button::Back => Some(Key::Back),
-      Button::Forward => Some(Key::Forward),
-    }
-  }
-
-  fn push_button_press(keys: &mut [ButtonEvent], value: ButtonEvent) {
-    let len = keys.len();
-    for i in 1..len {
-      keys[i] = keys[i - 1];
-    }
-    keys[0] = value;
-  }
-
-  fn check_for_triple(keys: &[ButtonEvent]) -> bool {
-    // let some_buttons = keys.iter().filter(|ev| ev.is_some());
-
-    if keys[1].is_some()
-      && keys[2].is_none()
-      && keys[3].is_some()
-      && keys[4].is_none()
-      && keys[5].is_some()
-      && keys[6].is_none()
-    {
-      if keys[1].button == keys[3].button && keys[3].button == keys[5].button {
-        return true;
-      }
-    }
-
-    return false;
-  }
-  // fn check_last_2(keys: &[ButtonEvent]) -> bool {
-  //   if keys[1].is_some() && keys[2].is_none() && keys[3].is_some() && keys[4].is_none() {
-  //     if keys[1].button == keys[3].button {
-  //       return true;
-  //     }
-  //   }
-
-  //   return false;
-  // }
-
-  #[task(priority = 3, local = [last_buttons, delay2], shared = [keypad, state])]
+  #[task(priority = 3, local = [event_buffer, delay2], shared = [keypad, state])]
   fn keypad_task(ctx: keypad_task::Context) -> () {
     let keypad_task::LocalResources {
-      last_buttons,
+      event_buffer,
       delay2,
     } = ctx.local;
     let keypad_task::SharedResources {
@@ -289,109 +203,103 @@ mod app {
 
     let now = monotonics::now();
 
-    keypad.lock(|keypad| {
-      let read_button = keypad.read(delay2);
+    if event_buffer.is_none() {
+      // set default value
+      *event_buffer = Some([keypad::ButtonEvent { button: None, now }; 8]);
+    }
 
-      push_button_press(
-        last_buttons,
-        ButtonEvent {
-          button: read_button,
-          now,
-        },
-      );
+    let mut key: Option<keypad::Key> = None;
 
-      // if let Some(button) = read_button {
-      //   if last_buttons[0].is_none() {
-      //     push_button_press(
-      //       last_buttons,
-      //       ButtonEvent {
-      //         button: Some(button),
-      //         now,
-      //       },
-      //     );
-      //   }
-      // } else {
-      //   if last_buttons[0].is_some() {
-      //     push_button_press(last_buttons, ButtonEvent { button: None, now });
-      //   }
-      // }
-    });
+    if let Some(event_buffer) = event_buffer {
+      keypad.lock(|keypad| {
+        let read_button = keypad.read(delay2);
 
-    state.lock(|state| {
-      match state.keypad_mode {
-        KeypadMode::Number => {
-          if let Some(button) = last_buttons[4].button {
-            let key = match button {
-              Button::Zero => Key::Zero,
-              Button::One => Key::One,
-              Button::Two => Key::Two,
-              Button::Three => Key::Three,
-              Button::Four => Key::Four,
-              Button::Five => Key::Five,
-              Button::Six => Key::Six,
-              Button::Seven => Key::Seven,
-              Button::Eight => Key::Eight,
-              Button::Nine => Key::Nine,
-              Button::Back => Key::Back,
-              Button::Forward => Key::Forward,
-            };
-            update_task::spawn(Msg::Type(key)).unwrap();
+        let last_button = event_buffer[0].button;
+        let both_none = last_button.is_none() && read_button.is_none();
+        if !both_none {
+          if last_button.is_some() && read_button.is_none() {
+            // key up
+            event_buffer.unshift(keypad::ButtonEvent { button: None, now });
+          }
+          if last_button.is_none() && read_button.is_some() {
+            // key down
+            event_buffer.unshift(keypad::ButtonEvent {
+              button: read_button,
+              now,
+            });
+          }
+
+          if last_button.is_some() && read_button.is_some() && last_button != read_button {
+            // key down, but different button
+            event_buffer.unshift(keypad::ButtonEvent {
+              button: read_button,
+              now,
+            });
           }
         }
-        KeypadMode::Text => {
-          if last_buttons[0].is_some() {
-            // wait until next cycle
-            return;
-          }
+      });
 
-          let mut key: Option<Key> = None;
+      if event_buffer[0].is_none() {
+        // wait until key up
 
-          if check_for_triple(last_buttons) {
-            // last 3 are the same
-            key = button_to_key(last_buttons[1].button.unwrap(), 3);
-          }
+        state.lock(|state| {
+          match state.keypad_mode {
+            KeypadMode::Number => {
+              if let Some(button) = event_buffer[1].button {
+                let number_key = match button {
+                  keypad::Button::Zero => keypad::Key::Zero,
+                  keypad::Button::One => keypad::Key::One,
+                  keypad::Button::Two => keypad::Key::Two,
+                  keypad::Button::Three => keypad::Key::Three,
+                  keypad::Button::Four => keypad::Key::Four,
+                  keypad::Button::Five => keypad::Key::Five,
+                  keypad::Button::Six => keypad::Key::Six,
+                  keypad::Button::Seven => keypad::Key::Seven,
+                  keypad::Button::Eight => keypad::Key::Eight,
+                  keypad::Button::Nine => keypad::Key::Nine,
+                  keypad::Button::Back => keypad::Key::Back,
+                  keypad::Button::Forward => keypad::Key::Forward,
+                };
+                // using the keypad in number mode will not clear the event_buffer
+                update_task::spawn(Msg::KeyUp(number_key)).unwrap();
+              }
+            }
+            KeypadMode::Text => {
+              if keypad::check_timespan_ms(&event_buffer[0].now, &now, 400) {
+                // enough time has passed to process an event
 
-          if last_buttons[1].is_some()
-            && last_buttons[2].is_none()
-            && last_buttons[3].is_none()
-            && last_buttons[4].is_none()
-          {
-            // _ * _ _ _ _
-            key = button_to_key(last_buttons[1].button.unwrap(), 1);
-          } else if last_buttons[1].is_some()
-            && last_buttons[2].is_none()
-            && last_buttons[3].is_some()
-            && last_buttons[4].is_none()
-            && last_buttons[5].is_none()
-            && last_buttons[6].is_none()
-          {
-            // _ * _ * _ _ _
-            key = button_to_key(last_buttons[1].button.unwrap(), 2);
-          } else if last_buttons[1].is_some()
-            && last_buttons[2].is_none()
-            && last_buttons[3].is_some()
-            && last_buttons[4].is_none()
-            && last_buttons[5].is_some()
-            && last_buttons[6].is_none()
-            && last_buttons[7].is_none()
-          {
-            // _ * _ * _ * _ _ _
-            key = button_to_key(last_buttons[1].button.unwrap(), 3);
-          } else if last_buttons[1].is_some()
-            && last_buttons[2].is_some()
-            && last_buttons[3].is_none()
-            && last_buttons[4].is_none()
-          {
-            // _ * _ * _ * _ * _ _ _
-            key = button_to_key(last_buttons[1].button.unwrap(), 4);
+                if let Some(last_button) = event_buffer[1].button {
+                  if (last_button == keypad::Button::Seven || last_button == keypad::Button::Nine)
+                    && event_buffer.check_for_quad()
+                  {
+                    // only buttons that can be pressed 4 times are 7 an 9
+                    // last 4 are the same
+                    key = last_button.to_key(4);
+                  } else if event_buffer.check_for_triple() {
+                    // last 3 are the same
+                    key = last_button.to_key(3);
+                  } else if event_buffer.check_for_double() {
+                    // last 2 are the same
+                    key = last_button.to_key(2);
+                  } else if event_buffer.check_for_single() {
+                    // just one
+                    key = last_button.to_key(1);
+                  }
+                }
+              }
+            }
           }
-
-          if let Some(key) = key {
-            update_task::spawn(Msg::Type(key)).unwrap();
-          }
-        }
+        });
       }
-    });
+    }
+
+    // there is a key to be processed
+    if let Some(key) = key {
+      // wipe the buffer
+      *event_buffer = None;
+      // send event
+      update_task::spawn(Msg::KeyUp(key)).unwrap();
+    }
 
     keypad_task::spawn_after(50.milliseconds()).unwrap();
   }
@@ -416,6 +324,7 @@ mod app {
       if *should_render {
         clear_screen(display, backlight);
 
+        defmt::info!("render");
         view(display, &state);
 
         show_screen(backlight);
@@ -427,7 +336,7 @@ mod app {
 
   #[task(priority = 1, shared = [state, should_render])]
   fn update_task(ctx: update_task::Context, msg: Msg) {
-    defmt::info!("update!");
+    defmt::info!("update");
     let update_task::SharedResources {
       should_render,
       state,
