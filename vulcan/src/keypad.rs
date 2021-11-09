@@ -243,7 +243,7 @@ impl Button {
     let i = times_pressed - 1;
 
     match *self {
-      Button::Zero => None,
+      Button::Zero => Some(Key::Zero),
       Button::One => None,
       Button::Two => Some(BUTTON_KEY_MAP.two[i]),
       Button::Three => Some(BUTTON_KEY_MAP.three[i]),
@@ -280,7 +280,7 @@ impl defmt::Format for Button {
 #[derive(Clone, Copy)]
 pub struct ButtonEvent {
   pub button: Option<Button>,
-  pub now: Instant<Systick<100>>,
+  pub now: Instant<Systick<400>>,
 }
 impl ButtonEvent {
   pub fn is_some(&self) -> bool {
@@ -375,8 +375,8 @@ impl EventBufferUtil for EventBuffer {
 
 /// checks that more than 400ms have passed between 2 instants
 pub fn check_timespan_ms(
-  first: &Instant<Systick<100>>,
-  second: &Instant<Systick<100>>,
+  first: &Instant<Systick<400>>,
+  second: &Instant<Systick<400>>,
   timespan: u32,
 ) -> bool {
   let generic_duration = second.checked_duration_since(&first).unwrap();

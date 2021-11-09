@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 #![deny(unsafe_code)]
-#![deny(warnings)]
+// #![deny(warnings)]
 
 use defmt_rtt as _; // global logger
 use panic_probe as _;
@@ -42,15 +42,16 @@ mod app {
   use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
   use embedded_hal::spi::{Mode, Phase, Polarity};
   use embedded_hal::{digital::v2::OutputPin, prelude::*};
+  use embedded_sdmmc::{Controller, TimeSource, Timestamp, VolumeIdx};
   use heapless::String;
   use keypad2::Keypad;
   use rtic::time::duration::*;
   use st7789::{Orientation, ST7789};
-  use stm32h7xx_hal::prelude::*;
+  use stm32h7xx_hal::{prelude::*, rcc};
   use systick_monotonic::Systick;
 
   #[monotonic(binds = SysTick, default = true)]
-  type MyMono = Systick<100>; // 100 Hz / 10 ms granularity
+  type MyMono = Systick<400>; // 100 Hz / 10 ms granularity
 
   #[shared]
   struct Shared {
@@ -77,16 +78,22 @@ mod app {
     // Set up the system clock.
     let rcc = ctx.device.RCC.constrain();
     let ccdr = rcc
-      .sys_ck(96.mhz())
-      .pll1_q_ck(48.mhz())
+      .sys_ck(400.mhz())
+      .pll1_strategy(rcc::PllConfigStrategy::Iterative)
+      .pll1_q_ck(100.mhz())
+      .pll2_strategy(rcc::PllConfigStrategy::Iterative)
+      .pll3_strategy(rcc::PllConfigStrategy::Iterative)
       .freeze(pwrcfg, &ctx.device.SYSCFG);
 
-    let mono = Systick::<100>::new(ctx.core.SYST, 100_000_000);
+    let mono = Systick::<400>::new(ctx.core.SYST, 400_000_000);
 
     let gpioa = ctx.device.GPIOA.split(ccdr.peripheral.GPIOA);
+    let _gpiob = ctx.device.GPIOB.split(ccdr.peripheral.GPIOB);
+    let gpioc = ctx.device.GPIOC.split(ccdr.peripheral.GPIOC);
+    let gpiod = ctx.device.GPIOD.split(ccdr.peripheral.GPIOD);
     let gpioe = ctx.device.GPIOE.split(ccdr.peripheral.GPIOE);
 
-    let mut delay = AsmDelay::new(bitrate::MegaHertz(100));
+    let mut delay = AsmDelay::new(bitrate::MegaHertz(400));
 
     let mut display = {
       let sck1 = gpioa.pa5.into_alternate_af5();
@@ -144,6 +151,60 @@ mod app {
       Keypad::new(rows, cols)
     };
 
+    {
+      // SDMMC1 pins
+      let clk = gpioc.pc12.into_alternate_af12();
+      let cmd = gpiod.pd2.into_alternate_af12();
+      let d0 = gpioc.pc8.into_alternate_af12();
+      let d1 = gpioc.pc9.into_alternate_af12();
+      let d2 = gpioc.pc10.into_alternate_af12();
+      let d3 = gpioc.pc11.into_alternate_af12();
+
+      let mut sd = ctx.device.SDMMC1.sdmmc(
+        (clk, cmd, d0, d1, d2, d3),
+        ccdr.peripheral.SDMMC1,
+        &ccdr.clocks,
+      );
+
+      // On most development boards this can be increased up to 50MHz. We choose a
+      // lower frequency here so that it should work even with flying leads
+      // connected to a SD card breakout.
+      match sd.init_card(2.mhz()) {
+        Ok(_) => {
+          let size = sd.card().unwrap().size();
+          defmt::info!("Size: {}", size);
+
+          struct Clock;
+
+          impl TimeSource for Clock {
+            fn get_timestamp(&self) -> Timestamp {
+              Timestamp {
+                year_since_1970: 0,
+                zero_indexed_month: 0,
+                zero_indexed_day: 0,
+                hours: 0,
+                minutes: 0,
+                seconds: 0,
+              }
+            }
+          }
+
+          let mut sd_fatfs = Controller::new(sd.sdmmc_block_device(), Clock);
+          let sd_fatfs_volume = sd_fatfs.get_volume(VolumeIdx(0)).unwrap();
+          let sd_fatfs_root_dir = sd_fatfs.open_root_dir(&sd_fatfs_volume).unwrap();
+          sd_fatfs
+            .iterate_dir(&sd_fatfs_volume, &sd_fatfs_root_dir, |entry| {
+              defmt::info!("{:?}", defmt::Debug2Format(&entry.name));
+            })
+            .unwrap();
+          sd_fatfs.close_dir(&sd_fatfs_volume, sd_fatfs_root_dir);
+        }
+        Err(err) => {
+          defmt::info!("{:?}", defmt::Debug2Format(&err));
+        }
+      }
+    };
+
     defmt::info!("INIT DONE");
 
     (
@@ -160,7 +221,7 @@ mod app {
         display,
         backlight,
         delay,
-        delay2: AsmDelay::new(bitrate::MegaHertz(100)),
+        delay2: AsmDelay::new(bitrate::MegaHertz(400)),
         event_buffer: None,
       },
       init::Monotonics(mono),
@@ -174,7 +235,7 @@ mod app {
     update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
     render_task::spawn().unwrap();
 
-    delay.delay_ms(4000u16);
+    delay.delay_ms(2000u16);
 
     update_task::spawn(Msg::Navigate(Screen::Home)).unwrap();
     render_task::spawn().unwrap();

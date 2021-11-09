@@ -16,6 +16,9 @@ pub fn update(state: &mut State, msg: Msg) {
         }
       }
       Key::Forward => {}
+      Key::Zero => {
+        defmt::info!("zero");
+      }
       _ => {
         state.msg.push_str(key.to_string()).ok();
         defmt::info!("key {}", key);
