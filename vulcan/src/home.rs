@@ -1,4 +1,4 @@
-use crate::types::{Display, Page, PageViewResult, State};
+use crate::types::{Page, PageViewResult, State, ViewError};
 use embedded_graphics::{
   mono_font::{ascii::FONT_10X20, MonoTextStyle},
   pixelcolor::Rgb565,
@@ -8,7 +8,10 @@ use embedded_graphics::{
 
 pub struct Home {}
 impl Page for Home {
-  fn view(display: &mut Display, state: &State) -> PageViewResult {
+  fn view(
+    display: &mut impl DrawTarget<Color = Rgb565, Error = ViewError>,
+    state: &State,
+  ) -> PageViewResult {
     display.clear(Rgb565::WHITE)?;
 
     let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::BLACK);

@@ -1,5 +1,4 @@
-use crate::types::{Display, PageViewResult};
-use crate::types::{Page, State};
+use crate::types::{Page, PageViewResult, State, ViewColor, ViewError};
 use embedded_graphics::{
   image::{Image, ImageRawLE},
   mono_font::{ascii::FONT_10X20, MonoTextStyle},
@@ -10,7 +9,10 @@ use embedded_graphics::{
 
 pub struct Splash {}
 impl Page for Splash {
-  fn view(display: &mut Display, _state: &State) -> PageViewResult {
+  fn view(
+    display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
+    _state: &State,
+  ) -> PageViewResult {
     let white_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
 
     Text::with_alignment(

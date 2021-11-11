@@ -23,6 +23,7 @@ defmt::timestamp!("{=usize}", {
   n
 });
 
+mod framebuffer;
 mod home;
 mod keypad;
 mod splash;
@@ -33,6 +34,7 @@ mod view;
 
 #[rtic::app(device = stm32h7xx_hal::stm32, peripherals = true, dispatchers = [USART1, USART2, EXTI0])]
 mod app {
+  use crate::framebuffer::Framebuffer;
   use crate::keypad::{self, EventBufferUtil, KeypadRead};
   use crate::types::{BacklightLED, Display, KeypadMode, Msg, Screen, State};
   use crate::update::update;
@@ -51,7 +53,7 @@ mod app {
   use systick_monotonic::Systick;
 
   #[monotonic(binds = SysTick, default = true)]
-  type MyMono = Systick<400>; // 100 Hz / 10 ms granularity
+  type MyMono = Systick<400>; // 400 Hz / 10 ms granularity
 
   #[shared]
   struct Shared {
@@ -67,6 +69,7 @@ mod app {
     display: Display,
     backlight: BacklightLED,
     event_buffer: Option<keypad::EventBuffer>,
+    framebuffer: Framebuffer,
   }
 
   #[init]
@@ -88,14 +91,14 @@ mod app {
     let mono = Systick::<400>::new(ctx.core.SYST, 400_000_000);
 
     let gpioa = ctx.device.GPIOA.split(ccdr.peripheral.GPIOA);
-    let _gpiob = ctx.device.GPIOB.split(ccdr.peripheral.GPIOB);
+    let gpiob = ctx.device.GPIOB.split(ccdr.peripheral.GPIOB);
     let gpioc = ctx.device.GPIOC.split(ccdr.peripheral.GPIOC);
     let gpiod = ctx.device.GPIOD.split(ccdr.peripheral.GPIOD);
     let gpioe = ctx.device.GPIOE.split(ccdr.peripheral.GPIOE);
 
     let mut delay = AsmDelay::new(bitrate::MegaHertz(400));
 
-    let mut display = {
+    let (mut display, mut backlight) = {
       let sck1 = gpioa.pa5.into_alternate_af5();
       let miso1 = gpioa.pa6.into_alternate_af5();
       let mosi1 = gpioa.pa7.into_alternate_af5();
@@ -115,8 +118,11 @@ mod app {
       let display_interface = SPIInterface::new(spi1, data_control, chip_select);
 
       let lcd_reset = gpioa.pa2.into_push_pull_output();
+      let backlight = gpioa.pa1.into_push_pull_output();
 
-      ST7789::new(display_interface, lcd_reset, 240, 240)
+      let display = ST7789::new(display_interface, lcd_reset, 240, 240);
+
+      (display, backlight)
     };
 
     // a certain amount of delay is necessary so the display responds on first boot
@@ -131,21 +137,19 @@ mod app {
 
     display.clear(Rgb565::BLACK).unwrap();
 
-    // backlight control
-    let mut backlight = gpioa.pa1.into_push_pull_output();
     backlight.set_high().unwrap();
 
     let keypad = {
       let cols = (
-        gpioe.pe8.into_open_drain_output(),
-        gpioe.pe9.into_open_drain_output(),
-        gpioe.pe10.into_open_drain_output(),
+        gpioc.pc5.into_open_drain_output(),
+        gpiob.pb1.into_open_drain_output(),
+        gpioe.pe7.into_open_drain_output(),
       );
       let rows = (
+        gpioe.pe9.into_pull_up_input(),
         gpioe.pe11.into_pull_up_input(),
-        gpioe.pe12.into_pull_up_input(),
         gpioe.pe13.into_pull_up_input(),
-        gpioe.pe14.into_pull_up_input(),
+        gpioe.pe15.into_pull_up_input(),
       );
 
       Keypad::new(rows, cols)
@@ -223,6 +227,7 @@ mod app {
         delay,
         delay2: AsmDelay::new(bitrate::MegaHertz(400)),
         event_buffer: None,
+        framebuffer: Framebuffer::new(),
       },
       init::Monotonics(mono),
     )
@@ -365,31 +370,29 @@ mod app {
     keypad_task::spawn_after(50.milliseconds()).unwrap();
   }
 
-  fn clear_screen(_display: &mut Display, _backlight: &mut BacklightLED) {
-    // backlight.set_low().unwrap();
-    // display.clear(Rgb565::BLACK).unwrap();
-  }
-  fn show_screen(_backlight: &mut BacklightLED) {
-    // backlight.set_high().unwrap();
-  }
-
-  #[task(priority = 2, shared = [state, should_render] , local = [display, backlight])]
+  #[task(priority = 2, shared = [state, should_render] , local = [display, backlight, framebuffer])]
   fn render_task(ctx: render_task::Context) {
     let render_task::SharedResources {
       should_render,
       state,
     } = ctx.shared;
-    let render_task::LocalResources { display, backlight } = ctx.local;
+    let render_task::LocalResources {
+      display,
+      backlight,
+      framebuffer,
+    } = ctx.local;
 
     (should_render, state).lock(|should_render, state| {
       if *should_render {
         defmt::info!("render");
 
-        clear_screen(display, backlight);
+        // backlight.set_low().unwrap();
 
-        view(display, &state).unwrap();
+        view(framebuffer, &state).unwrap();
+        framebuffer.draw(display).unwrap();
+        // view(display, &state).unwrap();
 
-        show_screen(backlight);
+        // backlight.set_high().unwrap();
 
         *should_render = false;
       }

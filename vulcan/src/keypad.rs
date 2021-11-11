@@ -2,21 +2,22 @@ use core::convert::TryInto;
 use embedded_hal::blocking::delay::DelayMs;
 use keypad2::Keypad;
 use rtic_monotonic::{Instant, Milliseconds};
-pub use stm32h7xx_hal::delay::Delay;
 use stm32h7xx_hal::gpio::{
-  gpioe::{PE10, PE11, PE12, PE13, PE14, PE8, PE9},
+  gpiob::PB1,
+  gpioc::PC5,
+  gpioe::{PE11, PE13, PE15, PE7, PE9},
   Input, OpenDrain, Output, PullUp,
 };
 use systick_monotonic::Systick;
 
 pub type Keys = Keypad<
+  PE9<Input<PullUp>>,
   PE11<Input<PullUp>>,
-  PE12<Input<PullUp>>,
   PE13<Input<PullUp>>,
-  PE14<Input<PullUp>>,
-  PE8<Output<OpenDrain>>,
-  PE9<Output<OpenDrain>>,
-  PE10<Output<OpenDrain>>,
+  PE15<Input<PullUp>>,
+  PC5<Output<OpenDrain>>,
+  PB1<Output<OpenDrain>>,
+  PE7<Output<OpenDrain>>,
 >;
 pub trait KeypadRead {
   fn read(&mut self, delay: &mut dyn DelayMs<u16>) -> Option<Button>;
