@@ -32,7 +32,9 @@ pub fn update(state: &mut State, msg: Msg) -> Cmd {
           }
         }
         Key::Down => {
-          state.selected_item = state.selected_item + 1;
+          if state.selected_item < 5 {
+            state.selected_item = state.selected_item + 1;
+          }
         }
         _ => {}
       },

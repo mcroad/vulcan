@@ -46,7 +46,7 @@ mod app {
   use heapless::String;
   use keypad2::Keypad;
   use rtic::time::duration::*;
-  use st7789::{Orientation, ST7789};
+  use st7789::{Orientation, TearingEffect, ST7789};
   use stm32h7xx_hal::{prelude::*, rcc};
   use systick_monotonic::Systick;
 
@@ -133,6 +133,8 @@ mod app {
 
     delay.delay_ms(250u16);
 
+    display.set_tearing_effect(TearingEffect::Off).unwrap();
+
     display.clear(Rgb565::BLACK).unwrap();
 
     backlight.set_high().unwrap();
@@ -174,7 +176,7 @@ mod app {
       match sd.init_card(2.mhz()) {
         Ok(_) => {
           let size = sd.card().unwrap().size();
-          defmt::info!("Size: {}", size);
+          defmt::info!("SD Size: {}", size);
 
           struct Clock;
 
