@@ -329,7 +329,7 @@ mod app {
               }
             }
             KeypadMode::Text => {
-              if keypad::check_timespan_ms(&event_buffer[0].now, &now, 400) {
+              if keypad::check_timespan_ms(&event_buffer[0].now, &now, 200) {
                 // enough time has passed to process an event
 
                 if let Some(last_button) = event_buffer[1].button {
