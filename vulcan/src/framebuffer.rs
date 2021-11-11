@@ -1,4 +1,4 @@
-use crate::types::{ViewColor, ViewError};
+use crate::view::{ViewColor, ViewError};
 use embedded_graphics::prelude::*;
 
 const SIZE: usize = 240;

@@ -1,7 +1,7 @@
 use crate::keypad::Key;
 use display_interface_spi::SPIInterface;
-use embedded_graphics::draw_target::DrawTarget;
 use heapless::String;
+use rtic_monotonic::Milliseconds;
 use st7789::ST7789;
 use stm32h7xx_hal::{
   device::SPI1,
@@ -10,7 +10,6 @@ use stm32h7xx_hal::{
     Output, PushPull,
   },
   spi::{Enabled, Spi},
-  Never,
 };
 
 pub type Display = ST7789<
@@ -44,14 +43,7 @@ pub enum Msg {
   KeyUp(Key),
 }
 
-pub type ViewColor = <Display as DrawTarget>::Color;
-pub type ViewError = st7789::Error<Never>;
-pub type PageViewResult = Result<(), ViewError>;
-
-pub trait Page {
-  fn update(_state: &mut State, _msg: Msg) {}
-  fn view(
-    display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
-    state: &State,
-  ) -> PageViewResult;
+pub enum Cmd {
+  Noop,
+  UpdateAfter(Milliseconds, Msg),
 }

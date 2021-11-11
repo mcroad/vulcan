@@ -1,9 +1,9 @@
 use crate::{
   keypad::Key,
-  types::{Msg, State},
+  types::{Cmd, Msg, State},
 };
 
-pub fn update(state: &mut State, msg: Msg) {
+pub fn update(state: &mut State, msg: Msg) -> Cmd {
   match msg {
     Msg::Navigate(screen) => {
       state.screen = screen;
@@ -25,4 +25,6 @@ pub fn update(state: &mut State, msg: Msg) {
       }
     },
   }
+
+  Cmd::Noop
 }
