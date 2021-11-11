@@ -1,6 +1,6 @@
 use crate::{
   keypad::Key,
-  types::{Cmd, Msg, State},
+  types::{Cmd, KeypadMode, Msg, State},
 };
 
 pub fn update(state: &mut State, msg: Msg) -> Cmd {
@@ -8,21 +8,35 @@ pub fn update(state: &mut State, msg: Msg) -> Cmd {
     Msg::Navigate(screen) => {
       state.screen = screen;
     }
-    Msg::KeyUp(key) => match key {
-      Key::Back => {
-        let len = state.msg.len();
-        if len > 0 {
-          state.msg.truncate(len - 1);
+    Msg::KeyUp(key) => match state.keypad_mode {
+      KeypadMode::Text => match key {
+        Key::Back => {
+          let len = state.msg.len();
+          if len > 0 {
+            state.msg.truncate(len - 1);
+          }
         }
-      }
-      Key::Forward => {}
-      Key::Zero => {
-        defmt::info!("zero");
-      }
-      _ => {
-        state.msg.push_str(key.to_string()).ok();
-        defmt::info!("key {}", key);
-      }
+        Key::Forward => {}
+        Key::Zero => {
+          defmt::info!("zero");
+        }
+        _ => {
+          state.msg.push_str(key.to_string()).ok();
+          defmt::info!("key {}", key);
+        }
+      },
+      KeypadMode::Navigation => match key {
+        Key::Up => {
+          if state.selected_item > 0 {
+            state.selected_item = state.selected_item - 1;
+          }
+        }
+        Key::Down => {
+          state.selected_item = state.selected_item + 1;
+        }
+        _ => {}
+      },
+      _ => {}
     },
   }
 

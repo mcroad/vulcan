@@ -28,6 +28,7 @@ pub enum Screen {
 pub enum KeypadMode {
   Number,
   Text,
+  Navigation,
 }
 
 #[derive(Debug)]
@@ -35,6 +36,7 @@ pub struct State {
   pub screen: Screen,
   pub msg: String<50usize>,
   pub keypad_mode: KeypadMode,
+  pub selected_item: usize,
 }
 
 #[derive(Debug)]

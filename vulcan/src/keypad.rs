@@ -83,6 +83,10 @@ pub enum Key {
   Nine,
   Back,
   Forward,
+  Up,
+  Down,
+  Left,
+  Right,
 }
 
 impl Key {
@@ -126,6 +130,10 @@ impl Key {
       Key::Nine => "9",
       Key::Back => "*",
       Key::Forward => "#",
+      Key::Up => "^",
+      Key::Down => "\\/",
+      Key::Left => "<",
+      Key::Right => ">",
     }
   }
 }
@@ -170,6 +178,10 @@ impl defmt::Format for Key {
       Key::Nine => defmt::write!(f, "9"),
       Key::Back => defmt::write!(f, "*"),
       Key::Forward => defmt::write!(f, "#"),
+      Key::Up => defmt::write!(f, "^"),
+      Key::Down => defmt::write!(f, "\\/"),
+      Key::Left => defmt::write!(f, "<"),
+      Key::Right => defmt::write!(f, ">"),
     }
   }
 }

@@ -215,7 +215,8 @@ mod app {
         state: State {
           screen: Screen::Splash,
           msg: String::from("home screen"),
-          keypad_mode: KeypadMode::Text,
+          keypad_mode: KeypadMode::Navigation,
+          selected_item: 0,
         },
         keypad,
       },
@@ -308,9 +309,29 @@ mod app {
 
         state.lock(|state| {
           match state.keypad_mode {
+            KeypadMode::Navigation => {
+              if let Some(button) = event_buffer[1].button {
+                let direction = match button {
+                  keypad::Button::Two => Some(keypad::Key::Up),
+                  keypad::Button::Four => Some(keypad::Key::Left),
+                  keypad::Button::Six => Some(keypad::Key::Right),
+                  keypad::Button::Eight => Some(keypad::Key::Down),
+
+                  keypad::Button::Back => Some(keypad::Key::Back),
+                  keypad::Button::Forward => Some(keypad::Key::Forward),
+                  _ => None,
+                };
+                // using the keypad in navigation mode will not clear the event_buffer
+                if let Some(direction) = direction {
+                  event_buffer.unshift(keypad::ButtonEvent { button: None, now });
+                  event_buffer.unshift(keypad::ButtonEvent { button: None, now });
+                  update_task::spawn(Msg::KeyUp(direction)).unwrap();
+                }
+              }
+            }
             KeypadMode::Number => {
               if let Some(button) = event_buffer[1].button {
-                let number_key = match button {
+                let number = match button {
                   keypad::Button::Zero => keypad::Key::Zero,
                   keypad::Button::One => keypad::Key::One,
                   keypad::Button::Two => keypad::Key::Two,
@@ -325,7 +346,9 @@ mod app {
                   keypad::Button::Forward => keypad::Key::Forward,
                 };
                 // using the keypad in number mode will not clear the event_buffer
-                update_task::spawn(Msg::KeyUp(number_key)).unwrap();
+                event_buffer.unshift(keypad::ButtonEvent { button: None, now });
+                event_buffer.unshift(keypad::ButtonEvent { button: None, now });
+                update_task::spawn(Msg::KeyUp(number)).unwrap();
               }
             }
             KeypadMode::Text => {
@@ -382,8 +405,6 @@ mod app {
 
     (should_render, state).lock(|should_render, state| {
       if *should_render {
-        defmt::info!("render");
-
         // backlight.set_low().unwrap();
 
         view(framebuffer, &state).unwrap();
@@ -399,7 +420,6 @@ mod app {
 
   #[task(priority = 1, shared = [state, should_render])]
   fn update_task(ctx: update_task::Context, msg: Msg) {
-    defmt::info!("update");
     let update_task::SharedResources {
       should_render,
       state,
