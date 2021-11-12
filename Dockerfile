@@ -18,4 +18,4 @@ RUN cargo install cargo-flash
 RUN cargo build --release --bin vulcan
 
 # flash to chip
-CMD cargo flash --release --bin vulcan --chip STM32F411CEUx
+CMD cargo flash --release --bin vulcan --chip STM32H743VITx
