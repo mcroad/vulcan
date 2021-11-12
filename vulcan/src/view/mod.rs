@@ -1,4 +1,4 @@
-use crate::types::{Display, Screen, State};
+use crate::types::{Display, Screen, Model};
 use embedded_graphics::draw_target::DrawTarget;
 use home::home;
 use splash::splash;
@@ -13,7 +13,7 @@ pub type ViewResult = Result<(), ViewError>;
 
 pub fn view(
   display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
-  state: &State,
+  state: &Model,
 ) -> ViewResult {
   return match state.screen {
     Screen::Splash => splash(display, state),

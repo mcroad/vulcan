@@ -19,12 +19,6 @@ pub type Display = ST7789<
 pub type BacklightLED = PA1<Output<PushPull>>;
 
 #[derive(Debug)]
-pub enum Screen {
-  Splash,
-  Home,
-}
-
-#[derive(Debug)]
 pub enum KeypadMode {
   Number,
   Text,
@@ -32,11 +26,17 @@ pub enum KeypadMode {
 }
 
 #[derive(Debug)]
-pub struct State {
+pub struct Model {
   pub screen: Screen,
   pub msg: String<50usize>,
   pub keypad_mode: KeypadMode,
   pub selected_item: usize,
+}
+
+#[derive(Debug)]
+pub enum Screen {
+  Splash,
+  Home,
 }
 
 #[derive(Debug)]
@@ -46,6 +46,6 @@ pub enum Msg {
 }
 
 pub enum Cmd {
-  Noop,
+  None,
   UpdateAfter(Milliseconds, Msg),
 }

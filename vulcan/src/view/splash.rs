@@ -1,5 +1,5 @@
 use crate::{
-  types::State,
+  types::Model,
   view::{ViewColor, ViewError, ViewResult},
 };
 use embedded_graphics::{
@@ -12,7 +12,7 @@ use embedded_graphics::{
 
 pub fn splash(
   display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
-  _state: &State,
+  _state: &Model,
 ) -> ViewResult {
   let white_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
 

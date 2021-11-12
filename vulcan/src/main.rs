@@ -34,7 +34,7 @@ mod view;
 mod app {
   use crate::framebuffer::Framebuffer;
   use crate::keypad::{self, EventBufferUtil, KeypadRead};
-  use crate::types::{BacklightLED, Cmd, Display, KeypadMode, Msg, Screen, State};
+  use crate::types::{BacklightLED, Cmd, Display, KeypadMode, Model, Msg, Screen};
   use crate::update::update;
   use crate::view::view;
   use asm_delay::{bitrate, AsmDelay};
@@ -56,7 +56,7 @@ mod app {
   #[shared]
   struct Shared {
     should_render: bool,
-    state: State,
+    state: Model,
     keypad: keypad::Keys,
   }
 
@@ -214,7 +214,7 @@ mod app {
     (
       Shared {
         should_render: true,
-        state: State {
+        state: Model {
           screen: Screen::Splash,
           msg: String::from("home screen"),
           keypad_mode: KeypadMode::Navigation,
@@ -433,7 +433,7 @@ mod app {
         Cmd::UpdateAfter(time, msg) => {
           update_task::spawn_after(time, msg).unwrap();
         }
-        Cmd::Noop => {}
+        Cmd::None => {}
       };
 
       *should_render = true;

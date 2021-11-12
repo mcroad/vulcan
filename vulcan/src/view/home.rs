@@ -1,4 +1,4 @@
-use crate::types::State;
+use crate::types::Model;
 use crate::view::{ViewError, ViewResult};
 use embedded_graphics::primitives::{
   PrimitiveStyle, PrimitiveStyleBuilder, Rectangle, RoundedRectangle,
@@ -24,7 +24,7 @@ fn rectangle_style(item_n: usize, cur_item: usize) -> PrimitiveStyle<Rgb565> {
 
 pub fn home(
   display: &mut impl DrawTarget<Color = Rgb565, Error = ViewError>,
-  state: &State,
+  state: &Model,
 ) -> ViewResult {
   display.clear(Rgb565::WHITE)?;
 
