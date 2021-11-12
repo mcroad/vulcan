@@ -63,7 +63,6 @@ mod app {
   #[local]
   struct Local {
     delay: AsmDelay,
-    delay2: AsmDelay,
     display: Display,
     backlight: BacklightLED,
     event_buffer: Option<keypad::EventBuffer>,
@@ -211,6 +210,10 @@ mod app {
 
     defmt::info!("INIT DONE");
 
+    // start the event loop
+    update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
+    event_loop_task::spawn().unwrap();
+
     (
       Shared {
         should_render: true,
@@ -226,7 +229,6 @@ mod app {
         display,
         backlight,
         delay,
-        delay2: AsmDelay::new(bitrate::MegaHertz(400)),
         event_buffer: None,
         framebuffer: Framebuffer::new(),
       },
@@ -234,28 +236,38 @@ mod app {
     )
   }
 
-  #[idle(local = [delay])]
-  fn idle(ctx: idle::Context) -> ! {
-    let idle::LocalResources { delay } = ctx.local;
+  // #[idle]
+  // fn idle(_ctx: idle::Context) -> ! {
+  //   loop {
+  //     cortex_m::asm::nop();
+  //   }
+  // }
 
-    update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
+  #[task(priority = 3, shared = [state, should_render])]
+  fn update_task(ctx: update_task::Context, msg: Msg) {
+    let update_task::SharedResources {
+      should_render,
+      state,
+    } = ctx.shared;
 
-    keypad_task::spawn_after(1000.milliseconds()).unwrap();
+    (should_render, state).lock(|should_render, state| {
+      let cmd = update(state, msg);
+      match cmd {
+        Cmd::UpdateAfter(time_ms, msg) => {
+          update_task::spawn_after(time_ms.milliseconds(), msg).unwrap();
+        }
+        Cmd::None => {}
+      };
 
-    loop {
-      if let Err(_err) = render_task::spawn() {
-        defmt::error!("error rendering in loop");
-      }
-
-      delay.delay_ms(30u16);
-    }
+      *should_render = true;
+    });
   }
 
-  #[task(priority = 3, local = [event_buffer, delay2], shared = [keypad, state])]
+  #[task(priority = 2, local = [event_buffer, delay], shared = [keypad, state])]
   fn keypad_task(ctx: keypad_task::Context) -> () {
     let keypad_task::LocalResources {
       event_buffer,
-      delay2,
+      delay,
     } = ctx.local;
     let keypad_task::SharedResources {
       mut keypad,
@@ -273,7 +285,7 @@ mod app {
 
     if let Some(event_buffer) = event_buffer {
       keypad.lock(|keypad| {
-        let read_button = keypad.read(delay2);
+        let read_button = keypad.read(delay);
 
         let last_button = event_buffer[0].button;
         let both_none = last_button.is_none() && read_button.is_none();
@@ -383,8 +395,6 @@ mod app {
       // send event
       update_task::spawn(Msg::KeyUp(key)).unwrap();
     }
-
-    keypad_task::spawn_after(50.milliseconds()).unwrap();
   }
 
   #[task(priority = 2, shared = [state, should_render] , local = [display, backlight, framebuffer])]
@@ -414,23 +424,13 @@ mod app {
     });
   }
 
-  #[task(priority = 1, shared = [state, should_render])]
-  fn update_task(ctx: update_task::Context, msg: Msg) {
-    let update_task::SharedResources {
-      should_render,
-      state,
-    } = ctx.shared;
+  #[task(priority = 1)]
+  fn event_loop_task(_ctx: event_loop_task::Context) -> () {
+    keypad_task::spawn().unwrap();
+    // update_task runs after called by keypad_task or update_task
+    // update_task has the highest priority
+    render_task::spawn().unwrap();
 
-    (should_render, state).lock(|should_render, state| {
-      let cmd = update(state, msg);
-      match cmd {
-        Cmd::UpdateAfter(time_ms, msg) => {
-          update_task::spawn_after(time_ms.milliseconds(), msg).unwrap();
-        }
-        Cmd::None => {}
-      };
-
-      *should_render = true;
-    });
+    event_loop_task::spawn_after(30.milliseconds()).unwrap();
   }
 }

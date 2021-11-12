@@ -1,7 +1,6 @@
 use crate::keypad::Key;
 use display_interface_spi::SPIInterface;
 use heapless::String;
-use rtic_monotonic::Milliseconds;
 use st7789::ST7789;
 use stm32h7xx_hal::{
   device::SPI1,
