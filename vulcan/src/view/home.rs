@@ -16,7 +16,7 @@ fn rectangle_style(item_n: usize, cur_item: usize) -> PrimitiveStyle<Rgb565> {
     .stroke_color(Rgb565::BLACK);
 
   if item_n == cur_item {
-    style = style.fill_color(Rgb565::GREEN);
+    style = style.fill_color(Rgb565::new(255, 165, 0));
   }
 
   style.build()
@@ -28,16 +28,10 @@ pub fn home(
 ) -> ViewResult {
   display.clear(Rgb565::WHITE)?;
 
-  // let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::BLACK);
+  let msgs = ["item 1", "item 2", "item 3", "item 4", "item 5"];
 
-  // Draw centered text.
-  // Text::with_alignment(
-  //   &state.msg,
-  //   display.bounding_box().center() + Point::new(0, 15),
-  //   character_style,
-  //   Alignment::Center,
-  // )
-  // .draw(display)?;
+  let black = MonoTextStyle::new(&FONT_10X20, Rgb565::BLACK);
+  let white = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
 
   let margin = 10;
   let space = 10;
@@ -48,9 +42,23 @@ pub fn home(
 
   let mut top_left = Point::new(margin, space);
   for i in 0..5 {
-    RoundedRectangle::with_equal_corners(Rectangle::new(top_left, rectangle_size), corner_radius)
-      .into_styled(rectangle_style(i, state.selected_item))
-      .draw(display)?;
+    let rec =
+      RoundedRectangle::with_equal_corners(Rectangle::new(top_left, rectangle_size), corner_radius)
+        .into_styled(rectangle_style(i, state.selected_item));
+    rec.draw(display)?;
+
+    // Draw centered text.
+    Text::with_alignment(
+      msgs[i],
+      rec.bounding_box().center() + Point::new(0, 5),
+      if i == state.selected_item {
+        white
+      } else {
+        black
+      },
+      Alignment::Center,
+    )
+    .draw(display)?;
 
     top_left = Point::new(margin, top_left.y + rectangle_size.height as i32 + space);
   }
