@@ -239,12 +239,6 @@ mod app {
     let idle::LocalResources { delay } = ctx.local;
 
     update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
-    render_task::spawn().unwrap();
-
-    delay.delay_ms(2000u16);
-
-    update_task::spawn(Msg::Navigate(Screen::Home)).unwrap();
-    render_task::spawn().unwrap();
 
     keypad_task::spawn_after(1000.milliseconds()).unwrap();
 
@@ -430,8 +424,8 @@ mod app {
     (should_render, state).lock(|should_render, state| {
       let cmd = update(state, msg);
       match cmd {
-        Cmd::UpdateAfter(time, msg) => {
-          update_task::spawn_after(time, msg).unwrap();
+        Cmd::UpdateAfter(time_ms, msg) => {
+          update_task::spawn_after(time_ms.milliseconds(), msg).unwrap();
         }
         Cmd::None => {}
       };

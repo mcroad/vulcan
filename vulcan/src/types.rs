@@ -33,7 +33,7 @@ pub struct Model {
   pub selected_item: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Screen {
   Splash,
   Home,
@@ -47,5 +47,5 @@ pub enum Msg {
 
 pub enum Cmd {
   None,
-  UpdateAfter(Milliseconds, Msg),
+  UpdateAfter(u32, Msg),
 }
