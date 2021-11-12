@@ -210,10 +210,6 @@ mod app {
 
     defmt::info!("INIT DONE");
 
-    // start the event loop
-    update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
-    event_loop_task::spawn().unwrap();
-
     (
       Shared {
         should_render: true,
@@ -236,12 +232,17 @@ mod app {
     )
   }
 
-  // #[idle]
-  // fn idle(_ctx: idle::Context) -> ! {
-  //   loop {
-  //     cortex_m::asm::nop();
-  //   }
-  // }
+  #[idle]
+  fn idle(_ctx: idle::Context) -> ! {
+    defmt::info!("start event loop");
+    update_task::spawn(Msg::Navigate(Screen::Splash)).unwrap();
+    event_loop_task::spawn().unwrap();
+
+    loop {
+      // loop necessary for RTT to work
+      cortex_m::asm::nop();
+    }
+  }
 
   #[task(priority = 3, shared = [state, should_render])]
   fn update_task(ctx: update_task::Context, msg: Msg) {
@@ -429,6 +430,8 @@ mod app {
     keypad_task::spawn().unwrap();
     // update_task runs after called by keypad_task or update_task
     // update_task has the highest priority
+    // keypad_task and render_task have the same priority because they're only 
+    // called by event_loop_task
     render_task::spawn().unwrap();
 
     event_loop_task::spawn_after(30.milliseconds()).unwrap();
