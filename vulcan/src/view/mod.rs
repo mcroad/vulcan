@@ -1,4 +1,4 @@
-use crate::types::{Display, Screen, Model};
+use crate::types::{Display, Model, Screen};
 use embedded_graphics::draw_target::DrawTarget;
 use home::home;
 use splash::splash;
