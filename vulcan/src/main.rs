@@ -51,7 +51,7 @@ mod app {
   use systick_monotonic::Systick;
 
   #[monotonic(binds = SysTick, default = true)]
-  type MyMono = Systick<400>; // 400 Hz / 10 ms granularity
+  type MyMono = Systick<480>; // 480 Hz / 10 ms granularity
 
   #[shared]
   struct Shared {
@@ -72,20 +72,21 @@ mod app {
   #[init]
   fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
     defmt::info!("INIT");
-    let pwr = ctx.device.PWR.constrain();
-    let pwrcfg = pwr.freeze();
+    let pwrcfg = ctx.device.PWR.constrain().vos0(&ctx.device.SYSCFG).freeze();
 
     // Set up the system clock.
-    let rcc = ctx.device.RCC.constrain();
-    let ccdr = rcc
-      .sys_ck(400.mhz())
+    let ccdr = ctx
+      .device
+      .RCC
+      .constrain()
+      .sys_ck(480.mhz())
       .pll1_strategy(rcc::PllConfigStrategy::Iterative)
       .pll1_q_ck(100.mhz())
       .pll2_strategy(rcc::PllConfigStrategy::Iterative)
       .pll3_strategy(rcc::PllConfigStrategy::Iterative)
       .freeze(pwrcfg, &ctx.device.SYSCFG);
 
-    let mono = Systick::<400>::new(ctx.core.SYST, 400_000_000);
+    let mono = Systick::<480>::new(ctx.core.SYST, 480_000_000);
 
     let gpioa = ctx.device.GPIOA.split(ccdr.peripheral.GPIOA);
     let gpiob = ctx.device.GPIOB.split(ccdr.peripheral.GPIOB);
@@ -93,7 +94,7 @@ mod app {
     let gpiod = ctx.device.GPIOD.split(ccdr.peripheral.GPIOD);
     let gpioe = ctx.device.GPIOE.split(ccdr.peripheral.GPIOE);
 
-    let mut delay = AsmDelay::new(bitrate::MegaHertz(400));
+    let mut delay = AsmDelay::new(bitrate::MegaHertz(480));
 
     let (mut display, mut backlight) = {
       let sck1 = gpioa.pa5.into_alternate_af5();
@@ -430,7 +431,7 @@ mod app {
     keypad_task::spawn().unwrap();
     // update_task runs after called by keypad_task or update_task
     // update_task has the highest priority
-    // keypad_task and render_task have the same priority because they're only 
+    // keypad_task and render_task have the same priority because they're only
     // called by event_loop_task
     render_task::spawn().unwrap();
 

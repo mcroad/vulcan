@@ -293,7 +293,7 @@ impl defmt::Format for Button {
 #[derive(Clone, Copy)]
 pub struct ButtonEvent {
   pub button: Option<Button>,
-  pub now: Instant<Systick<400>>,
+  pub now: Instant<Systick<480>>,
 }
 impl ButtonEvent {
   pub fn is_some(&self) -> bool {
@@ -386,10 +386,10 @@ impl EventBufferUtil for EventBuffer {
   }
 }
 
-/// checks that more than 400ms have passed between 2 instants
+/// checks that enough time has passed between 2 instants
 pub fn check_timespan_ms(
-  first: &Instant<Systick<400>>,
-  second: &Instant<Systick<400>>,
+  first: &Instant<Systick<480>>,
+  second: &Instant<Systick<480>>,
   timespan: u32,
 ) -> bool {
   let generic_duration = second.checked_duration_since(&first).unwrap();
