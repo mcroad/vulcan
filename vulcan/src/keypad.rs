@@ -11,13 +11,13 @@ use stm32h7xx_hal::gpio::{
 use systick_monotonic::Systick;
 
 pub type Keys = Keypad<
+  PC5<Input<PullUp>>,
+  PB1<Input<PullUp>>,
+  PE7<Input<PullUp>>,
   PE9<Input<PullUp>>,
-  PE11<Input<PullUp>>,
-  PE13<Input<PullUp>>,
-  PE15<Input<PullUp>>,
-  PC5<Output<OpenDrain>>,
-  PB1<Output<OpenDrain>>,
-  PE7<Output<OpenDrain>>,
+  PE11<Output<OpenDrain>>,
+  PE13<Output<OpenDrain>>,
+  PE15<Output<OpenDrain>>,
 >;
 pub trait KeypadRead {
   fn read(&mut self, delay: &mut dyn DelayMs<u16>) -> Option<Button>;

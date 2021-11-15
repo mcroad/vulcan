@@ -141,15 +141,15 @@ mod app {
 
     let keypad = {
       let cols = (
-        gpioc.pc5.into_open_drain_output(),
-        gpiob.pb1.into_open_drain_output(),
-        gpioe.pe7.into_open_drain_output(),
+        gpioe.pe11.into_open_drain_output(),
+        gpioe.pe13.into_open_drain_output(),
+        gpioe.pe15.into_open_drain_output(),
       );
       let rows = (
+        gpioc.pc5.into_pull_up_input(),
+        gpiob.pb1.into_pull_up_input(),
+        gpioe.pe7.into_pull_up_input(),
         gpioe.pe9.into_pull_up_input(),
-        gpioe.pe11.into_pull_up_input(),
-        gpioe.pe13.into_pull_up_input(),
-        gpioe.pe15.into_pull_up_input(),
       );
 
       Keypad::new(rows, cols)
