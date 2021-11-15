@@ -435,6 +435,6 @@ mod app {
     // called by event_loop_task
     render_task::spawn().unwrap();
 
-    event_loop_task::spawn_after(30.milliseconds()).unwrap();
+    event_loop_task::spawn_after(15.milliseconds()).unwrap();
   }
 }
