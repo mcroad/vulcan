@@ -13,8 +13,10 @@ rustflags = [
   "link-arg=--nmagic",
 ]
 
-[build]
-target = "thumbv7em-none-eabihf"
+# Necessary to disable build target until bdk supports no_std
+# cargo run -p vulcan --target thumbv7em-none-eabihf
+# [build]
+# target = "thumbv7em-none-eabihf"
 
 [alias]
 rb = "run --bin"

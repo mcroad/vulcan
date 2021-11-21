@@ -15,7 +15,7 @@ RUN apt install -y pkg-config libusb-1.0-0-dev libftdi1-dev
 RUN cargo install cargo-flash
 
 # build release version
-RUN cargo build --release --bin vulcan
+RUN cargo build --release --bin vulcan --target thumbv7em-none-eabihf
 
 # flash to chip
 CMD cargo flash --release --bin vulcan --chip STM32H743VITx
