@@ -1,5 +1,5 @@
 [workspace]
-members = ["vulcan"]
+members = ["vulcan", "libvulcan"]
 
 [profile.dev]
 codegen-units = 1
