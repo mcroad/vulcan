@@ -106,7 +106,7 @@ mod app {
           polarity: Polarity::IdleLow,
           phase: Phase::CaptureOnFirstTransition,
         },
-        8.mhz(),
+        30.mhz(), // 32 mhz is the highest freq that works based on testing
         ccdr.peripheral.SPI1,
         &ccdr.clocks,
       );
