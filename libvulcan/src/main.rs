@@ -173,11 +173,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let xpriv = (mnemonic.into_extended_key()? as ExtendedKey)
     .into_xprv(network)
     .unwrap();
+  println!("xpriv: {}", xpriv);
 
   let xpub = ExtendedPubKey::from_private(&secp, &xpriv);
 
   let fingerprint = xpub.fingerprint();
   println!("Master Fingerprint: {}", fingerprint);
+
+  let wif = xpriv.private_key.to_wif();
+  println!("wif: {}", wif);
+
+  let wif_desc = DescriptorSecretKey::SinglePriv(DescriptorSinglePriv {
+    key: xpriv.private_key,
+    origin: Some((fingerprint, path.clone())),
+  });
+  println!("wif descriptor: {}", wif_desc);
+
+  let xpriv_desc = DescriptorSecretKey::XPrv(DescriptorXKey {
+    derivation_path: DerivationPath::master(),
+    origin: Some((fingerprint, path.clone())),
+    xkey: xpriv,
+    wildcard: Wildcard::None,
+  });
+  println!("xpriv descriptor: {}", xpriv_desc);
 
   let xpriv_at_path = xpriv.derive_priv(&secp, &path)?;
   let xpub_at_path = ExtendedPubKey::from_private(&secp, &xpriv_at_path);
