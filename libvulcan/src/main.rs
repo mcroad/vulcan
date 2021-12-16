@@ -3,14 +3,20 @@ use bdk::{
     base64, consensus,
     secp256k1::Secp256k1,
     util::{
-      bip32::{self, ExtendedPubKey},
+      bip32::{self, DerivationPath, ExtendedPubKey},
       psbt::PartiallySignedTransaction,
     },
     Address, Network,
   },
   database::MemoryDatabase,
   descriptor,
-  keys::{bip39, DerivableKey, ExtendedKey, IntoDescriptorKey},
+  keys::{
+    bip39, DerivableKey, DescriptorSecretKey, DescriptorSinglePriv, ExtendedKey, IntoDescriptorKey,
+  },
+  miniscript::{
+    descriptor::{DescriptorXKey, Wildcard},
+    DescriptorPublicKey,
+  },
   SignOptions, Wallet,
 };
 use std::str::FromStr;
@@ -178,13 +184,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("xpub: {}", xpub_at_path);
   // let slip132_xpub = convert_xpub_slip132(&xpub, &network, &wallet_type, &script_type);
 
-  let specter_xpub = format!(
-    "[{}{}]{}",
-    fingerprint,
-    &path.to_string()[1..],
-    xpub_at_path
-  )
-  .replace("'", "h");
+  let specter_xpub = DescriptorPublicKey::XPub(DescriptorXKey {
+    derivation_path: DerivationPath::master(),
+    origin: Some((fingerprint, path.clone())),
+    xkey: xpub_at_path,
+    wildcard: Wildcard::None,
+  });
   println!("specter xpub: {}", specter_xpub);
 
   let descriptor = {
