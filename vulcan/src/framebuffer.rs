@@ -4,13 +4,17 @@ use embedded_graphics::prelude::*;
 const SIZE: usize = 240;
 
 pub struct Framebuffer {
-  pub pixels: [ViewColor; SIZE * SIZE],
+  buffer: [ViewColor; SIZE * SIZE],
+  // pixels: [ViewColor; SIZE * SIZE],
 }
 
 impl Framebuffer {
   pub fn new() -> Self {
     Self {
-      pixels: [ViewColor::BLACK; SIZE * SIZE],
+      // what the user draws to
+      buffer: [ViewColor::BLACK; SIZE * SIZE],
+      // keeps track of the current state of the screen
+      // pixels: [ViewColor::BLACK; SIZE * SIZE],
     }
   }
 
@@ -22,7 +26,7 @@ impl Framebuffer {
     // renders correct screen
     let index = y * SIZE + x;
 
-    self.pixels[index] = color;
+    self.buffer[index] = color;
   }
 }
 
@@ -56,11 +60,23 @@ impl Drawable for Framebuffer {
     D: DrawTarget<Color = Self::Color>,
   {
     // colors must impl Iterator<Item = ViewColor>
-    let colors = self.pixels.iter().map(|color| *color);
+    let colors = self.buffer.iter().map(|color| *color);
     // for testing purposes
     // let colors = core::iter::repeat(ViewColor::MAGENTA);
 
     target.fill_contiguous(&self.bounding_box(), colors)?;
+
+    // out of memory or possible flip-link bug
+    // let pixels = self.pixels.iter().map(|color| *color);
+    // let diff = colors
+    //   .enumerate()
+    //   .filter(|(i, color)| pixels[i] != color)
+    //   .map(|(i, color)| {
+    //     let y = i / SIZE;
+    //     let x = i - y;
+    //     Pixel(Point::new(x, y), color)
+    //   });
+    // target.draw_iter(diff)?;
 
     return Ok(Point::new_equal(SIZE as i32));
   }
