@@ -111,7 +111,7 @@ dependencies = [
 
 [[package]]
 name = "bdk"
-version = "0.13.1-dev"
+version = "0.14.1-dev"
 dependencies = [
  "async-trait",
  "bdk-macros",

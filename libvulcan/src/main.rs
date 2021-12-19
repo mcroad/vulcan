@@ -2,17 +2,12 @@ use bdk::{
   bitcoin::{
     base64, consensus,
     secp256k1::Secp256k1,
-    util::{
-      bip32::{self, DerivationPath, ExtendedPubKey},
-      psbt::PartiallySignedTransaction,
-    },
+    util::{bip32, psbt::PartiallySignedTransaction},
     Address, Network,
   },
   database::MemoryDatabase,
   descriptor,
-  keys::{
-    bip39, DerivableKey, DescriptorSecretKey, DescriptorSinglePriv, ExtendedKey, IntoDescriptorKey,
-  },
+  keys::{bip39, DerivableKey, DescriptorSecretKey, DescriptorSinglePriv, ExtendedKey},
   miniscript::{
     descriptor::{DescriptorXKey, Wildcard},
     DescriptorPublicKey,
@@ -63,7 +58,7 @@ fn get_path(
 }
 
 fn _convert_xpub_slip132(
-  xpub: &ExtendedPubKey,
+  xpub: &bip32::ExtendedPubKey,
   network: &Network,
   wallet_type: &WalletType,
   script_type: &ScriptType,
@@ -152,14 +147,34 @@ fn calc_spend_change(
   return (spend, change);
 }
 
+fn get_wallet(
+  root: &bip32::ExtendedPrivKey,
+  path: &bip32::DerivationPath,
+  network: Network,
+) -> Result<Wallet<(), MemoryDatabase>, bdk::Error> {
+  let external = {
+    let send_path = path.child(bip32::ChildNumber::from_normal_idx(0)?);
+    let desc_key = root.into_descriptor_key(None, send_path)?;
+    descriptor!(wpkh(desc_key))?
+  };
+  println!("receive: {}", external.0);
+  let internal = {
+    let change_path = path.child(bip32::ChildNumber::from_normal_idx(1)?);
+    let desc_key = root.into_descriptor_key(None, change_path)?;
+    descriptor!(wpkh(desc_key))?
+  };
+  println!("change:  {}", internal.0);
+
+  return Wallet::new_offline(
+    external,
+    Some(internal),
+    network,
+    MemoryDatabase::default(),
+  );
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   let secp = Secp256k1::new();
-
-  // testnet
-  // let phrase = "shed rebuild nut suffer begin estate vehicle round city sudden fence spoon";
-  // signet
-  let phrase = "typical bicycle winter insane actor chat upper lazy brother club rib speed bid word caught differ fragile venture merge seed glimpse head exile success";
-  let mnemonic = bip39::Mnemonic::parse_in(bip39::Language::English, phrase)?;
 
   let network = Network::Testnet;
   println!("network: {:?}", network);
@@ -170,67 +185,54 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let path = get_path(&network, &wallet_type, &script_type)?;
   println!("Derivation Path: {}", path);
 
-  let xpriv = (mnemonic.into_extended_key()? as ExtendedKey)
-    .into_xprv(network)
-    .unwrap();
-  println!("xpriv: {}", xpriv);
+  println!("");
 
-  let xpub = ExtendedPubKey::from_private(&secp, &xpriv);
+  // testnet
+  // let phrase = "shed rebuild nut suffer begin estate vehicle round city sudden fence spoon";
+  // signet
+  let phrase = "typical bicycle winter insane actor chat upper lazy brother club rib speed bid word caught differ fragile venture merge seed glimpse head exile success";
+  let mnemonic = bip39::Mnemonic::parse_in(bip39::Language::English, phrase)?;
+  let xkey: ExtendedKey = mnemonic.into_extended_key()?;
+  let root = xkey.into_xprv(network).unwrap();
+  println!("root xpriv: {}", root);
+
+  let xpub = bip32::ExtendedPubKey::from_private(&secp, &root);
+  println!("root xpub: {}", xpub);
+
+  println!("");
 
   let fingerprint = xpub.fingerprint();
   println!("Master Fingerprint: {}", fingerprint);
 
-  let wif = xpriv.private_key.to_wif();
-  println!("wif: {}", wif);
-
+  println!("wif: {}", root.private_key.to_wif());
   let wif_desc = DescriptorSecretKey::SinglePriv(DescriptorSinglePriv {
-    key: xpriv.private_key,
+    key: root.private_key,
     origin: Some((fingerprint, path.clone())),
   });
   println!("wif descriptor: {}", wif_desc);
 
-  let xpriv_desc = DescriptorSecretKey::XPrv(DescriptorXKey {
-    derivation_path: DerivationPath::master(),
-    origin: Some((fingerprint, path.clone())),
-    xkey: xpriv,
-    wildcard: Wildcard::None,
-  });
-  println!("xpriv descriptor: {}", xpriv_desc);
+  println!("");
 
-  let xpriv_at_path = xpriv.derive_priv(&secp, &path)?;
-  let xpub_at_path = ExtendedPubKey::from_private(&secp, &xpriv_at_path);
-  println!("xpub: {}", xpub_at_path);
+  let xpriv_at_path = root.derive_priv(&secp, &path)?;
+  let xpub_at_path = bip32::ExtendedPubKey::from_private(&secp, &xpriv_at_path);
+  println!("xpub:                             {}", xpub_at_path);
   // let slip132_xpub = convert_xpub_slip132(&xpub, &network, &wallet_type, &script_type);
 
   let specter_xpub = DescriptorPublicKey::XPub(DescriptorXKey {
-    derivation_path: DerivationPath::master(),
+    derivation_path: bip32::DerivationPath::master(),
     origin: Some((fingerprint, path.clone())),
     xkey: xpub_at_path,
     wildcard: Wildcard::None,
   });
   println!("specter xpub: {}", specter_xpub);
 
-  let descriptor = {
-    let send_path = path.child(bip32::ChildNumber::from_normal_idx(0)?);
-    let desc_key = (xpriv, send_path).into_descriptor_key()?;
-    descriptor!(wpkh(desc_key))?
-  };
-  let change_descriptor = {
-    let change_path = path.child(bip32::ChildNumber::from_normal_idx(1)?);
-    let desc_key = (xpriv, change_path).into_descriptor_key().unwrap();
-    descriptor!(wpkh(desc_key))?
-  };
+  let wallet = get_wallet(&root, &path, network)?;
 
-  let wallet = Wallet::new_offline(
-    descriptor,
-    Some(change_descriptor),
-    network,
-    MemoryDatabase::default(),
-  )?;
+  println!("");
 
   let serialized_psbt = "cHNidP8BAHECAAAAAVBfV44DutAVcwBhLjMDvKtwbQrmjkH+MFjFXPUqFS9/AQAAAAD9////AkZHmAAAAAAAFgAUZjVsZYVAouW7J4+EBUkSr57hq1cQJwAAAAAAABYAFBAjFi4nxS8Zk94GX+oLLSGwP5sObP4AAAABAHECAAAAAQRANrAsHCjxffzlyW5XgWuP4zvg5uyK69HEtKp36018AAAAAAD9////AhAnAAAAAAAAFgAUe5yb+brLgwDgNAd2FhiCD6ZEJ/vjbpgAAAAAABYAFLXGhIrgQeONcX9YAuONxfsqpR8rSv4AAAEBH+NumAAAAAAAFgAUtcaEiuBB441xf1gC443F+yqlHysiBgPF+tMr9FV6qyy6i32WuHnS+wB30GZgodSYsGaNPeFM7RjiaHvrVAAAgAEAAIAAAACAAQAAAAAAAAAAIgICyh7fjg8uUNT8Kzs5cHSGTKBa4QiUNOGTd7+zkoa0AqwY4mh761QAAIABAACAAAAAgAEAAAABAAAAAAA=";
 
-  println!("\n\nUnsigned PSBT: {:?}\n", serialized_psbt);
+  println!("Unsigned PSBT: {:?}\n", serialized_psbt);
 
   let mut psbt: PartiallySignedTransaction =
     consensus::deserialize(&base64::decode(&serialized_psbt).unwrap())?;
@@ -251,13 +253,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let output = total_spend + total_change;
   println!("input - fee == output: {}", input - fee == output);
 
-  println!("change list: {:#?}", change);
-  println!("spend list: {:#?}", spend);
-  println!("\n\n");
+  println!("change list: {:?}", change);
+  println!("spend list: {:?}", spend);
+  println!("");
 
   if wallet.sign(&mut psbt, SignOptions::default())? {
     println!(
-      "Signed PSBT:   {:?}\n",
+      "Signed PSBT: {:?}",
       base64::encode(&consensus::serialize(&psbt))
     );
   } else {
