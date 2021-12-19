@@ -32,10 +32,21 @@ pub struct Model {
   pub selected_item: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExportScreen {
+  Menu,
+  SeedQR,
+  Specter,
+  Sparrow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
   Splash,
   Home,
+  Create,
+  Sign,
+  ExportWallet(ExportScreen),
 }
 
 #[derive(Debug)]
