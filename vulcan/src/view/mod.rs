@@ -5,6 +5,7 @@ use self::{
   sign::sign_transaction,
   splash::splash,
   util::{ViewColor, ViewError, ViewResult},
+  verify::verify_address,
 };
 use crate::types::{Model, Screen};
 use embedded_graphics::draw_target::DrawTarget;
@@ -15,6 +16,7 @@ mod home;
 mod sign;
 mod splash;
 pub mod util;
+mod verify;
 
 pub fn view(
   display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
@@ -24,6 +26,7 @@ pub fn view(
     Screen::Splash => splash(display, state),
     Screen::Home => home(display, state),
     Screen::Create => create_wallet(display, state),
+    Screen::Verify => verify_address(display, state),
     Screen::ExportWallet(export_screen) => export_wallet(display, state, export_screen),
     Screen::Sign => sign_transaction(display, state),
   };

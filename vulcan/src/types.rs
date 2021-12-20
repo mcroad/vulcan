@@ -63,6 +63,7 @@ pub enum Screen {
   Home,
   Create,
   Sign,
+  Verify,
   ExportWallet(ExportScreen),
 }
 
