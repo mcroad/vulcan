@@ -118,7 +118,7 @@ mod app {
       let lcd_reset = gpioa.pa2.into_push_pull_output();
       let backlight = gpioa.pa1.into_push_pull_output();
 
-      let display = ST7789::new(display_interface, lcd_reset, 240, 240);
+      let display = ST7789::new(display_interface, lcd_reset, 240, 320);
 
       (display, backlight)
     };
@@ -129,7 +129,9 @@ mod app {
     // Initialise the display and clear the screen
     display.init(&mut delay).unwrap();
 
-    display.set_orientation(Orientation::Landscape).unwrap();
+    display
+      .set_orientation(Orientation::PortraitSwapped)
+      .unwrap();
 
     delay.delay_ms(250u16);
 
@@ -394,7 +396,7 @@ mod app {
     }
   }
 
-  #[task(priority = 2, shared = [state, should_render] , local = [display, backlight, framebuffer])]
+  #[task(priority = 2, shared = [state, should_render], local = [display, backlight, framebuffer])]
   fn render_task(ctx: render_task::Context) {
     let render_task::SharedResources {
       should_render,

@@ -1,20 +1,21 @@
 use crate::view::util::{ViewColor, ViewError};
 use embedded_graphics::prelude::*;
 
-const SIZE: usize = 240;
+const WIDTH: usize = 240;
+const HEIGHT: usize = 320;
 
 pub struct Framebuffer {
-  buffer: [ViewColor; SIZE * SIZE],
-  // pixels: [ViewColor; SIZE * SIZE],
+  buffer: [ViewColor; WIDTH * HEIGHT],
+  // pixels: [ViewColor; WIDTH * HEIGHT],
 }
 
 impl Framebuffer {
   pub fn new() -> Self {
     Self {
       // what the user draws to
-      buffer: [ViewColor::BLACK; SIZE * SIZE],
+      buffer: [ViewColor::BLACK; WIDTH * HEIGHT],
       // keeps track of the current state of the screen
-      // pixels: [ViewColor::BLACK; SIZE * SIZE],
+      // pixels: [ViewColor::BLACK; WIDTH * HEIGHT],
     }
   }
 
@@ -24,7 +25,7 @@ impl Framebuffer {
     // renders mirrored screen. not sure why
     // let index = x * SIZE + y;
     // renders correct screen
-    let index = y * SIZE + x;
+    let index = y * WIDTH + x;
 
     self.buffer[index] = color;
   }
@@ -48,7 +49,7 @@ impl DrawTarget for Framebuffer {
 
 impl OriginDimensions for Framebuffer {
   fn size(&self) -> Size {
-    Size::new_equal(SIZE as u32)
+    Size::new(WIDTH as u32, HEIGHT as u32)
   }
 }
 
@@ -78,6 +79,6 @@ impl Drawable for Framebuffer {
     //   });
     // target.draw_iter(diff)?;
 
-    return Ok(Point::new_equal(SIZE as i32));
+    return Ok(Point::new(WIDTH as i32, HEIGHT as i32));
   }
 }
