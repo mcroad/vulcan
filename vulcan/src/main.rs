@@ -414,6 +414,7 @@ mod app {
 
         view(framebuffer, &state).unwrap();
         framebuffer.draw(display).unwrap();
+
         // view(display, &state).unwrap();
 
         // backlight.set_high().unwrap();
