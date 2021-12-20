@@ -214,12 +214,7 @@ mod app {
     (
       Shared {
         should_render: true,
-        state: Model {
-          screen: Screen::Splash,
-          msg: String::from("home screen"),
-          keypad_mode: KeypadMode::Navigation,
-          selected_item: 0,
-        },
+        state: Model::default(),
         keypad,
       },
       Local {

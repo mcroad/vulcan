@@ -30,6 +30,23 @@ pub struct Model {
   pub msg: String<50usize>,
   pub keypad_mode: KeypadMode,
   pub selected_item: usize,
+  pub home_menu: [&'static str; 4],
+}
+impl Default for Model {
+  fn default() -> Self {
+    return Self {
+      screen: Screen::Splash,
+      msg: String::from("home screen"),
+      keypad_mode: KeypadMode::Navigation,
+      selected_item: 0,
+      home_menu: [
+        "Create New Wallet",
+        "Sign Transaction",
+        "Verify Address",
+        "Export Wallet",
+      ],
+    };
+  }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

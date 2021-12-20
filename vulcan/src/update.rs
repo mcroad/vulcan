@@ -3,6 +3,17 @@ use crate::{
   types::{Cmd, ExportScreen, KeypadMode, Model, Msg, Screen},
 };
 
+fn go_up(state: &mut Model) {
+  if state.selected_item > 0 {
+    state.selected_item = state.selected_item - 1;
+  }
+}
+fn go_down(state: &mut Model, max: usize) {
+  if state.selected_item < max {
+    state.selected_item = state.selected_item + 1;
+  }
+}
+
 pub fn update(state: &mut Model, msg: Msg) -> Cmd {
   if state.screen == Screen::Splash {
     match msg {
@@ -34,16 +45,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
           }
         },
         KeypadMode::Navigation => match key {
-          Key::Up => {
-            if state.selected_item > 0 {
-              state.selected_item = state.selected_item - 1;
-            }
-          }
-          Key::Down => {
-            if state.selected_item < 4 {
-              state.selected_item = state.selected_item + 1;
-            }
-          }
+          Key::Up => go_up(state),
+          Key::Down => go_down(state, 4),
           _ => {}
         },
         _ => {}
@@ -53,16 +56,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     match msg {
       Msg::KeyUp(key) => match state.keypad_mode {
         KeypadMode::Navigation => match key {
-          Key::Up => {
-            if state.selected_item > 0 {
-              state.selected_item = state.selected_item - 1;
-            }
-          }
-          Key::Down => {
-            if state.selected_item < 2 {
-              state.selected_item = state.selected_item + 1;
-            }
-          }
+          Key::Up => go_up(state),
+          Key::Down => go_down(state, state.home_menu.len()),
           Key::Forward => {
             match state.selected_item {
               0 => {
@@ -116,16 +111,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     match msg {
       Msg::KeyUp(key) => match state.keypad_mode {
         KeypadMode::Navigation => match key {
-          Key::Up => {
-            if state.selected_item > 0 {
-              state.selected_item = state.selected_item - 1;
-            }
-          }
-          Key::Down => {
-            if state.selected_item < 2 {
-              state.selected_item = state.selected_item + 1;
-            }
-          }
+          Key::Up => go_up(state),
+          Key::Down => go_down(state, 2),
           Key::Back => {
             state.screen = Screen::Home;
             state.selected_item = 0;

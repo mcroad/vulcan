@@ -14,10 +14,9 @@ pub fn home(
   let width: u32 = display.bounding_box().bottom_right().unwrap().x as u32 - (margin as u32) * 2;
 
   let mut top_left = Point::new(margin, space);
-
-  top_left = draw_button(display, &state, &top_left, width, 0, "Create New Wallet")?;
-  top_left = draw_button(display, &state, &top_left, width, 1, "Sign Transaction")?;
-  draw_button(display, &state, &top_left, width, 2, "Export Wallet")?;
+  for (i, msg) in state.home_menu.iter().enumerate() {
+    top_left = draw_button(display, &state, &top_left, width, i, msg)?;
+  }
 
   Ok(())
 }
