@@ -1,6 +1,6 @@
 use crate::{
-  keypad::Key,
-  types::{Cmd, ExportScreen, KeypadMode, Model, Msg, Screen},
+  keypad::{Key, NavigationKey},
+  types::{Cmd, ExportScreen, KeyType, Model, Msg, Screen},
 };
 
 fn go_up(state: &mut Model) {
@@ -9,9 +9,13 @@ fn go_up(state: &mut Model) {
   }
 }
 fn go_down(state: &mut Model, max: usize) {
-  if state.selected_item < max {
+  if state.selected_item < (max - 1) {
     state.selected_item = state.selected_item + 1;
   }
+}
+fn go_home(state: &mut Model) {
+  state.screen = Screen::Home;
+  state.selected_item = 0;
 }
 
 pub fn update(state: &mut Model, msg: Msg) -> Cmd {
@@ -27,8 +31,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
           _ => {}
         }
       }
-      Msg::KeyUp(key) => match state.keypad_mode {
-        KeypadMode::Text => match key {
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Text(key) => match key {
           Key::Back => {
             let len = state.msg.len();
             if len > 0 {
@@ -36,17 +40,14 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
             }
           }
           Key::Forward => {}
-          Key::Zero => {
-            defmt::info!("zero");
-          }
           _ => {
             state.msg.push_str(key.to_string()).ok();
             defmt::info!("key {}", key);
           }
         },
-        KeypadMode::Navigation => match key {
-          Key::Up => go_up(state),
-          Key::Down => go_down(state, 4),
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Up => go_up(state),
+          NavigationKey::Down => go_down(state, 4),
           _ => {}
         },
         _ => {}
@@ -54,11 +55,11 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     }
   } else if state.screen == Screen::Home {
     match msg {
-      Msg::KeyUp(key) => match state.keypad_mode {
-        KeypadMode::Navigation => match key {
-          Key::Up => go_up(state),
-          Key::Down => go_down(state, state.home_menu.len()),
-          Key::Forward => {
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Up => go_up(state),
+          NavigationKey::Down => go_down(state, state.home_menu.len()),
+          NavigationKey::Forward => {
             match state.selected_item {
               0 => {
                 state.screen = Screen::Create;
@@ -67,6 +68,9 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
                 state.screen = Screen::Sign;
               }
               2 => {
+                state.screen = Screen::Verify;
+              }
+              3 => {
                 state.screen = Screen::ExportWallet(ExportScreen::Menu);
               }
               _ => {}
@@ -81,12 +85,9 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     }
   } else if state.screen == Screen::Create {
     match msg {
-      Msg::KeyUp(key) => match state.keypad_mode {
-        KeypadMode::Navigation => match key {
-          Key::Back => {
-            state.screen = Screen::Home;
-            state.selected_item = 0;
-          }
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Back => go_home(state),
           _ => {}
         },
         _ => {}
@@ -95,12 +96,20 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     }
   } else if state.screen == Screen::Sign {
     match msg {
-      Msg::KeyUp(key) => match state.keypad_mode {
-        KeypadMode::Navigation => match key {
-          Key::Back => {
-            state.screen = Screen::Home;
-            state.selected_item = 0;
-          }
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Back => go_home(state),
+          _ => {}
+        },
+        _ => {}
+      },
+      _ => {}
+    }
+  } else if state.screen == Screen::Verify {
+    match msg {
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Back => go_home(state),
           _ => {}
         },
         _ => {}
@@ -109,14 +118,11 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
     }
   } else if state.screen == Screen::ExportWallet(ExportScreen::Menu) {
     match msg {
-      Msg::KeyUp(key) => match state.keypad_mode {
-        KeypadMode::Navigation => match key {
-          Key::Up => go_up(state),
-          Key::Down => go_down(state, 2),
-          Key::Back => {
-            state.screen = Screen::Home;
-            state.selected_item = 0;
-          }
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Up => go_up(state),
+          NavigationKey::Down => go_down(state, 3),
+          NavigationKey::Back => go_home(state),
           _ => {}
         },
         _ => {}

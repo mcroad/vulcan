@@ -34,7 +34,7 @@ mod view;
 mod app {
   use crate::framebuffer::Framebuffer;
   use crate::keypad::{self, EventBufferUtil, KeypadRead};
-  use crate::types::{BacklightLED, Cmd, Display, KeypadMode, Model, Msg, Screen};
+  use crate::types::{BacklightLED, Cmd, Display, KeyType, KeypadMode, Model, Msg, Screen};
   use crate::update::update;
   use crate::view::view;
   use asm_delay::{bitrate, AsmDelay};
@@ -317,43 +317,43 @@ mod app {
             KeypadMode::Navigation => {
               if let Some(button) = event_buffer[1].button {
                 let direction = match button {
-                  keypad::Button::Two => Some(keypad::Key::Up),
-                  keypad::Button::Four => Some(keypad::Key::Left),
-                  keypad::Button::Six => Some(keypad::Key::Right),
-                  keypad::Button::Eight => Some(keypad::Key::Down),
+                  keypad::Button::Two => Some(keypad::NavigationKey::Up),
+                  keypad::Button::Four => Some(keypad::NavigationKey::Left),
+                  keypad::Button::Six => Some(keypad::NavigationKey::Right),
+                  keypad::Button::Eight => Some(keypad::NavigationKey::Down),
 
-                  keypad::Button::Back => Some(keypad::Key::Back),
-                  keypad::Button::Forward => Some(keypad::Key::Forward),
+                  keypad::Button::Back => Some(keypad::NavigationKey::Back),
+                  keypad::Button::Forward => Some(keypad::NavigationKey::Forward),
                   _ => None,
                 };
                 // using the keypad in navigation mode will not clear the event_buffer
                 if let Some(direction) = direction {
                   event_buffer.unshift(keypad::ButtonEvent { button: None, now });
                   event_buffer.unshift(keypad::ButtonEvent { button: None, now });
-                  update_task::spawn(Msg::KeyUp(direction)).unwrap();
+                  update_task::spawn(Msg::KeyUp(KeyType::Navigation(direction))).unwrap();
                 }
               }
             }
             KeypadMode::Number => {
               if let Some(button) = event_buffer[1].button {
                 let number = match button {
-                  keypad::Button::Zero => keypad::Key::Zero,
-                  keypad::Button::One => keypad::Key::One,
-                  keypad::Button::Two => keypad::Key::Two,
-                  keypad::Button::Three => keypad::Key::Three,
-                  keypad::Button::Four => keypad::Key::Four,
-                  keypad::Button::Five => keypad::Key::Five,
-                  keypad::Button::Six => keypad::Key::Six,
-                  keypad::Button::Seven => keypad::Key::Seven,
-                  keypad::Button::Eight => keypad::Key::Eight,
-                  keypad::Button::Nine => keypad::Key::Nine,
-                  keypad::Button::Back => keypad::Key::Back,
-                  keypad::Button::Forward => keypad::Key::Forward,
+                  keypad::Button::Zero => keypad::NumberKey::Zero,
+                  keypad::Button::One => keypad::NumberKey::One,
+                  keypad::Button::Two => keypad::NumberKey::Two,
+                  keypad::Button::Three => keypad::NumberKey::Three,
+                  keypad::Button::Four => keypad::NumberKey::Four,
+                  keypad::Button::Five => keypad::NumberKey::Five,
+                  keypad::Button::Six => keypad::NumberKey::Six,
+                  keypad::Button::Seven => keypad::NumberKey::Seven,
+                  keypad::Button::Eight => keypad::NumberKey::Eight,
+                  keypad::Button::Nine => keypad::NumberKey::Nine,
+                  keypad::Button::Back => keypad::NumberKey::Back,
+                  keypad::Button::Forward => keypad::NumberKey::Forward,
                 };
                 // using the keypad in number mode will not clear the event_buffer
                 event_buffer.unshift(keypad::ButtonEvent { button: None, now });
                 event_buffer.unshift(keypad::ButtonEvent { button: None, now });
-                update_task::spawn(Msg::KeyUp(number)).unwrap();
+                update_task::spawn(Msg::KeyUp(KeyType::Number(number))).unwrap();
               }
             }
             KeypadMode::Text => {
@@ -390,7 +390,7 @@ mod app {
       // wipe the buffer
       *event_buffer = None;
       // send event
-      update_task::spawn(Msg::KeyUp(key)).unwrap();
+      update_task::spawn(Msg::KeyUp(KeyType::Text(key))).unwrap();
     }
   }
 

@@ -71,22 +71,8 @@ pub enum Key {
   X,
   Y,
   Z,
-  Zero,
-  One,
-  Two,
-  Three,
-  Four,
-  Five,
-  Six,
-  Seven,
-  Eight,
-  Nine,
   Back,
   Forward,
-  Up,
-  Down,
-  Left,
-  Right,
 }
 
 impl Key {
@@ -118,22 +104,8 @@ impl Key {
       Key::X => "X",
       Key::Y => "Y",
       Key::Z => "Z",
-      Key::Zero => "0",
-      Key::One => "1",
-      Key::Two => "2",
-      Key::Three => "3",
-      Key::Four => "4",
-      Key::Five => "5",
-      Key::Six => "6",
-      Key::Seven => "7",
-      Key::Eight => "8",
-      Key::Nine => "9",
       Key::Back => "*",
       Key::Forward => "#",
-      Key::Up => "^",
-      Key::Down => "\\/",
-      Key::Left => "<",
-      Key::Right => ">",
     }
   }
 }
@@ -166,22 +138,96 @@ impl defmt::Format for Key {
       Key::X => defmt::write!(f, "X"),
       Key::Y => defmt::write!(f, "Y"),
       Key::Z => defmt::write!(f, "Z"),
-      Key::Zero => defmt::write!(f, "0"),
-      Key::One => defmt::write!(f, "1"),
-      Key::Two => defmt::write!(f, "2"),
-      Key::Three => defmt::write!(f, "3"),
-      Key::Four => defmt::write!(f, "4"),
-      Key::Five => defmt::write!(f, "5"),
-      Key::Six => defmt::write!(f, "6"),
-      Key::Seven => defmt::write!(f, "7"),
-      Key::Eight => defmt::write!(f, "8"),
-      Key::Nine => defmt::write!(f, "9"),
       Key::Back => defmt::write!(f, "*"),
       Key::Forward => defmt::write!(f, "#"),
-      Key::Up => defmt::write!(f, "^"),
-      Key::Down => defmt::write!(f, "\\/"),
-      Key::Left => defmt::write!(f, "<"),
-      Key::Right => defmt::write!(f, ">"),
+    }
+  }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum NumberKey {
+  Zero,
+  One,
+  Two,
+  Three,
+  Four,
+  Five,
+  Six,
+  Seven,
+  Eight,
+  Nine,
+  Back,
+  Forward,
+}
+
+impl NumberKey {
+  pub fn to_string(&self) -> &str {
+    match *self {
+      NumberKey::Zero => "0",
+      NumberKey::One => "1",
+      NumberKey::Two => "2",
+      NumberKey::Three => "3",
+      NumberKey::Four => "4",
+      NumberKey::Five => "5",
+      NumberKey::Six => "6",
+      NumberKey::Seven => "7",
+      NumberKey::Eight => "8",
+      NumberKey::Nine => "9",
+      NumberKey::Back => "*",
+      NumberKey::Forward => "#",
+    }
+  }
+}
+impl defmt::Format for NumberKey {
+  fn format(&self, f: defmt::Formatter) {
+    match *self {
+      NumberKey::Zero => defmt::write!(f, "0"),
+      NumberKey::One => defmt::write!(f, "1"),
+      NumberKey::Two => defmt::write!(f, "2"),
+      NumberKey::Three => defmt::write!(f, "3"),
+      NumberKey::Four => defmt::write!(f, "4"),
+      NumberKey::Five => defmt::write!(f, "5"),
+      NumberKey::Six => defmt::write!(f, "6"),
+      NumberKey::Seven => defmt::write!(f, "7"),
+      NumberKey::Eight => defmt::write!(f, "8"),
+      NumberKey::Nine => defmt::write!(f, "9"),
+      NumberKey::Back => defmt::write!(f, "*"),
+      NumberKey::Forward => defmt::write!(f, "#"),
+    }
+  }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum NavigationKey {
+  Back,
+  Forward,
+  Up,
+  Down,
+  Left,
+  Right,
+}
+
+impl NavigationKey {
+  pub fn to_string(&self) -> &str {
+    match *self {
+      NavigationKey::Back => "*",
+      NavigationKey::Forward => "#",
+      NavigationKey::Up => "^",
+      NavigationKey::Down => "\\/",
+      NavigationKey::Left => "<",
+      NavigationKey::Right => ">",
+    }
+  }
+}
+impl defmt::Format for NavigationKey {
+  fn format(&self, f: defmt::Formatter) {
+    match *self {
+      NavigationKey::Back => defmt::write!(f, "*"),
+      NavigationKey::Forward => defmt::write!(f, "#"),
+      NavigationKey::Up => defmt::write!(f, "^"),
+      NavigationKey::Down => defmt::write!(f, "\\/"),
+      NavigationKey::Left => defmt::write!(f, "<"),
+      NavigationKey::Right => defmt::write!(f, ">"),
     }
   }
 }
@@ -256,7 +302,7 @@ impl Button {
     let i = times_pressed - 1;
 
     match *self {
-      Button::Zero => Some(Key::Zero),
+      Button::Zero => None,
       Button::One => None,
       Button::Two => Some(BUTTON_KEY_MAP.two[i]),
       Button::Three => Some(BUTTON_KEY_MAP.three[i]),

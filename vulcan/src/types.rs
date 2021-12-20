@@ -1,4 +1,4 @@
-use crate::keypad::Key;
+use crate::keypad::{Key, NavigationKey, NumberKey};
 use display_interface_spi::SPIInterface;
 use heapless::String;
 use st7789::ST7789;
@@ -22,6 +22,13 @@ pub enum KeypadMode {
   Number,
   Text,
   Navigation,
+}
+
+#[derive(Debug)]
+pub enum KeyType {
+  Number(NumberKey),
+  Text(Key),
+  Navigation(NavigationKey),
 }
 
 #[derive(Debug)]
@@ -70,7 +77,7 @@ pub enum Screen {
 #[derive(Debug)]
 pub enum Msg {
   Navigate(Screen),
-  KeyUp(Key),
+  KeyUp(KeyType),
 }
 
 pub enum Cmd {
