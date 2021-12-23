@@ -165,12 +165,36 @@ fn get_wallet(
   };
   println!("change:  {}", internal.0);
 
-  return Wallet::new_offline(
-    external,
-    Some(internal),
-    network,
-    MemoryDatabase::default(),
-  );
+  return Wallet::new_offline(external, Some(internal), network, MemoryDatabase::default());
+}
+
+/// [0:2] 2 digits for how many words to parse out
+/// [2:2 + word_count * 4] mnemonic seed indeces as 4-digit numbers
+/// [2 + word_count * 4:] the rest is interpreted as 3-digits per unicode char. makes up the path after the "m/"
+fn parse_extended_seedqr(qr: &str) -> (Vec<u16>, bip32::DerivationPath) {
+  // parse mnemonic phrase
+  let count = qr[0..2].parse::<usize>().unwrap();
+  let end = 2 + count * 4;
+  let indeces = &qr[2..end];
+  let mut words: Vec<u16> = vec![];
+  for i in 0..count {
+    let start = i * 4;
+    let end = start + 4;
+    words.push(indeces[start..end].parse::<u16>().unwrap());
+  }
+
+  // parse path as each char as 3-digit unicode
+  let path_chars = &qr[end..];
+  let count = path_chars.len() / 3;
+  let mut path: Vec<char> = vec![];
+  for i in 0..count {
+    let start = i * 3;
+    let end = start + 3;
+    path.push(path_chars[start..end].parse::<u8>().unwrap() as char);
+  }
+  let path_str = &["m/", path.iter().collect::<String>().as_str()].join("");
+  let path = bip32::DerivationPath::from_str(path_str).unwrap();
+  return (words, path);
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -265,6 +289,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   } else {
     println!("Error: could not sign transaction");
   }
+
+  let seed= "136400980811079503490561095703230934105802751813017212440282184807481683015201310078178605500063";
+  // fits in a 29x29 qr code
+  let serialized_seedqr = ["24", seed, "056052104047049104047048104"].join("");
+  println!("{:?}", parse_extended_seedqr(serialized_seedqr.as_str()));
 
   Ok(())
 }
