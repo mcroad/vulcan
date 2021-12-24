@@ -1,14 +1,12 @@
-use core::convert::TryInto;
+use dwt_systick_monotonic::{fugit::Instant, ExtU32};
 use embedded_hal::blocking::delay::DelayMs;
 use keypad2::Keypad;
-use rtic_monotonic::{Instant, Milliseconds};
 use stm32h7xx_hal::gpio::{
   gpiob::PB1,
   gpioc::PC5,
   gpioe::{PE11, PE13, PE15, PE7, PE9},
   Input, OpenDrain, Output, PullUp,
 };
-use systick_monotonic::Systick;
 
 pub type Keys = Keypad<
   PC5<Input<PullUp>>,
@@ -339,7 +337,7 @@ impl defmt::Format for Button {
 #[derive(Clone, Copy)]
 pub struct ButtonEvent {
   pub button: Option<Button>,
-  pub now: Instant<Systick<480>>,
+  pub now: Instant<u64, 1, 480>,
 }
 impl ButtonEvent {
   pub fn is_some(&self) -> bool {
@@ -434,14 +432,13 @@ impl EventBufferUtil for EventBuffer {
 
 /// checks that enough time has passed between 2 instants
 pub fn check_timespan_ms(
-  first: &Instant<Systick<480>>,
-  second: &Instant<Systick<480>>,
+  first: &Instant<u64, 1, 480>,
+  second: &Instant<u64, 1, 480>,
   timespan: u32,
 ) -> bool {
-  let generic_duration = second.checked_duration_since(&first).unwrap();
+  let generic_duration = second.checked_duration_since(*first).unwrap();
 
-  let millis: Milliseconds<u32> = generic_duration.try_into().unwrap();
-  if millis > Milliseconds(timespan) {
+  if generic_duration > timespan.millis::<1, 480>() {
     return true;
   }
 

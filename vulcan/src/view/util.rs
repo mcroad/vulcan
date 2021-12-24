@@ -1,3 +1,4 @@
+use crate::types::{Display, Model};
 use embedded_graphics::{
   mono_font::{ascii::FONT_10X20, MonoTextStyle},
   pixelcolor::Rgb565,
@@ -6,7 +7,6 @@ use embedded_graphics::{
   text::{Alignment, Text},
 };
 use stm32h7xx_hal::Never;
-use crate::types::{Display, Model};
 
 pub type ViewColor = <Display as DrawTarget>::Color;
 pub type ViewError = st7789::Error<Never>;

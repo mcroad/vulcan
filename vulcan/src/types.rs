@@ -82,5 +82,5 @@ pub enum Msg {
 
 pub enum Cmd {
   None,
-  UpdateAfter(u32, Msg),
+  UpdateAfter(u64, Msg),
 }

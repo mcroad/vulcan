@@ -43,12 +43,10 @@ mod app {
   use embedded_hal::spi::{Mode, Phase, Polarity};
   use embedded_hal::{digital::v2::OutputPin, prelude::*};
   use embedded_sdmmc::{Controller, TimeSource, Timestamp, VolumeIdx};
-  use heapless::String;
   use keypad2::Keypad;
-  use rtic::time::duration::*;
   use st7789::{Orientation, TearingEffect, ST7789};
   use stm32h7xx_hal::{prelude::*, rcc};
-  use systick_monotonic::Systick;
+  use systick_monotonic::*;
 
   #[monotonic(binds = SysTick, default = true)]
   type MyMono = Systick<480>; // 480 Hz / 10 ms granularity
@@ -251,7 +249,7 @@ mod app {
       let cmd = update(state, msg);
       match cmd {
         Cmd::UpdateAfter(time_ms, msg) => {
-          update_task::spawn_after(time_ms.milliseconds(), msg).unwrap();
+          update_task::spawn_after(time_ms.millis(), msg).unwrap();
         }
         Cmd::None => {}
       };
@@ -431,6 +429,6 @@ mod app {
     // called by event_loop_task
     render_task::spawn().unwrap();
 
-    event_loop_task::spawn_after(15.milliseconds()).unwrap();
+    event_loop_task::spawn_after(15.millis()).unwrap();
   }
 }
