@@ -1,8 +1,13 @@
 #![no_main]
 #![no_std]
-#![deny(unsafe_code)]
 // #![deny(warnings)]
+// #![feature(alloc_error_handler)]
+#![feature(default_alloc_error_handler)]
 
+extern crate alloc;
+
+use alloc_cortex_m::CortexMHeap;
+// use core::alloc::Layout;
 use defmt_rtt as _; // global logger
 use panic_probe as _;
 use stm32h7xx_hal as _; // memory layout
@@ -22,6 +27,14 @@ defmt::timestamp!("{=usize}", {
   COUNT.store(n + 1, Ordering::Relaxed);
   n
 });
+
+#[global_allocator]
+static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
+
+// #[alloc_error_handler]
+// fn oom(_: Layout) -> ! {
+//   loop {}
+// }
 
 mod framebuffer;
 mod keypad;
@@ -69,6 +82,10 @@ mod app {
 
   #[init]
   fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
+    unsafe {
+      super::ALLOCATOR.init(cortex_m_rt::heap_start() as usize, 1024);
+    };
+
     defmt::info!("INIT");
     let pwrcfg = ctx.device.PWR.constrain().vos0(&ctx.device.SYSCFG).freeze();
 

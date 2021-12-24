@@ -4,6 +4,7 @@ edition = "2018"
 version = "0.1.0"
 
 [dependencies]
+alloc-cortex-m = "0.4.1"
 cortex-m = "0.7.3"
 cortex-m-rtic = "0.6.0-rc.4"
 rtic-monotonic = "0.1.0-rc.2"
@@ -29,6 +30,8 @@ embedded-layout = "0.2.0"
 keypad2 = "0.1.1"
 asm-delay = "0.9.0"
 embedded-sdmmc = "0.3.0"
+qr_code = { path = "../../qr_code", default-features = false }
+cortex-m-rt = "0.7.1"
 
 [features]
 # set logging levels here

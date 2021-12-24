@@ -1,8 +1,10 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
 runner = "probe-run --chip STM32H743VITx"
 rustflags = [
-  "-C",
-  "linker=flip-link",
+  # flip-link not yet compatible alloc-cortex-m
+  # https://github.com/knurling-rs/flip-link/issues/62
+  # "-C",
+  # "linker=flip-link",
   "-C",
   "link-arg=-Tlink.x",
   "-C",
@@ -19,5 +21,7 @@ rustflags = [
 # target = "thumbv7em-none-eabihf"
 
 [alias]
+vulcan = "run -p vulcan --target thumbv7em-none-eabihf"
+libvulcan = "run -p libvulcan"
 rb = "run --bin"
 rrb = "run --release --bin"
