@@ -123,6 +123,29 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
           NavigationKey::Up => go_up(state),
           NavigationKey::Down => go_down(state, 3),
           NavigationKey::Back => go_home(state),
+          NavigationKey::Forward => {
+            match state.selected_item {
+              0 => {
+                state.screen = Screen::ExportWallet(ExportScreen::SeedQR);
+              }
+              _ => {}
+            }
+            state.selected_item = 0;
+          }
+          _ => {}
+        },
+        _ => {}
+      },
+      _ => {}
+    }
+  } else if state.screen == Screen::ExportWallet(ExportScreen::SeedQR) {
+    match msg {
+      Msg::KeyUp(key_type) => match key_type {
+        KeyType::Navigation(key) => match key {
+          NavigationKey::Back => {
+            state.screen = Screen::ExportWallet(ExportScreen::Menu);
+            state.selected_item = 0;
+          }
           _ => {}
         },
         _ => {}
