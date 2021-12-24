@@ -1,8 +1,8 @@
 use crate::view::util::{ViewColor, ViewError};
 use embedded_graphics::prelude::*;
 
-const WIDTH: usize = 240;
-const HEIGHT: usize = 320;
+const WIDTH: usize = 320;
+const HEIGHT: usize = 240;
 const SIZE: usize = WIDTH * HEIGHT;
 
 pub struct Framebuffer {

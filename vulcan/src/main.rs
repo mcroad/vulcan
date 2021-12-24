@@ -118,7 +118,7 @@ mod app {
       let lcd_reset = gpioa.pa2.into_push_pull_output();
       let backlight = gpioa.pa1.into_push_pull_output();
 
-      let display = ST7789::new(display_interface, lcd_reset, 240, 320);
+      let display = ST7789::new(display_interface, lcd_reset, 320, 240);
 
       (display, backlight)
     };
@@ -129,9 +129,7 @@ mod app {
     // Initialise the display and clear the screen
     display.init(&mut delay).unwrap();
 
-    display
-      .set_orientation(Orientation::PortraitSwapped)
-      .unwrap();
+    display.set_orientation(Orientation::Landscape).unwrap();
 
     delay.delay_ms(250u16);
 
