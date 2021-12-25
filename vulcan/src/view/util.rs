@@ -44,24 +44,24 @@ pub fn draw_button(
   display: &mut impl DrawTarget<Color = Rgb565, Error = ViewError>,
   state: &Model,
   top_left: &Point,
-  width: u32,
-  button_n: usize,
+  button_i: usize,
   text: &str,
 ) -> Result<Point, ViewError> {
   let fonts = get_fonts();
+  let width: u32 = display.bounding_box().bottom_right().unwrap().x as u32 - MARGIN_X * 2;
   let corner_radius = Size::new(10, 10);
   let rectangle_size = Size::new(width, 30);
 
   let rec =
     RoundedRectangle::with_equal_corners(Rectangle::new(*top_left, rectangle_size), corner_radius)
-      .into_styled(rectangle_style(button_n, state.selected_item));
+      .into_styled(rectangle_style(button_i, state.selected_item));
   rec.draw(display)?;
 
   // Draw centered text.
   Text::with_alignment(
     text,
     rec.bounding_box().center() + Point::new(0, 5),
-    if button_n == state.selected_item {
+    if button_i == state.selected_item {
       fonts.white
     } else {
       fonts.black

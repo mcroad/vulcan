@@ -1,4 +1,4 @@
-use super::util::{draw_button, ViewError, ViewResult};
+use super::util::{draw_button, ViewError, ViewResult, MARGIN_X, MARGIN_Y};
 use crate::types::Model;
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
 
@@ -8,14 +8,9 @@ pub fn home(
 ) -> ViewResult {
   display.clear(Rgb565::WHITE)?;
 
-  let margin = 10;
-  let space = 10;
-
-  let width: u32 = display.bounding_box().bottom_right().unwrap().x as u32 - (margin as u32) * 2;
-
-  let mut top_left = Point::new(margin, space);
+  let mut top_left = Point::new(MARGIN_X as i32, MARGIN_Y as i32);
   for (i, msg) in state.home_menu.iter().enumerate() {
-    top_left = draw_button(display, &state, &top_left, width, i, msg)?;
+    top_left = draw_button(display, &state, &top_left, i, msg)?;
   }
 
   Ok(())

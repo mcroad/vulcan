@@ -82,10 +82,9 @@ pub fn export_wallet(
       let mut top_left =
         draw_nav(display, "Export Wallet")? + Point::new(MARGIN_X as i32, MARGIN_Y as i32);
 
-      let width: u32 = display.bounding_box().bottom_right().unwrap().x as u32 - MARGIN_X * 2;
-      top_left = draw_button(display, &state, &top_left, width, 0, "SeedQR")?;
-      top_left = draw_button(display, &state, &top_left, width, 1, "Specter")?;
-      draw_button(display, &state, &top_left, width, 2, "Sparrow")?;
+      top_left = draw_button(display, &state, &top_left, 0, "SeedQR")?;
+      top_left = draw_button(display, &state, &top_left, 1, "Specter")?;
+      draw_button(display, &state, &top_left, 2, "Sparrow")?;
     }
     ExportScreen::SeedQR => {
       let seedqr = "136400980811079503490561095703230934105802751813017212440282184807481683015201310078178605500063";
