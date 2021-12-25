@@ -56,7 +56,7 @@ impl Default for Model {
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ExportScreen {
   Menu,
   SeedQR,
@@ -64,12 +64,19 @@ pub enum ExportScreen {
   Sparrow,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum SignScreen {
+  Menu,
+  FromQR,
+  FromFile,
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Screen {
   Splash,
   Home,
   Create,
-  Sign,
+  Sign(SignScreen),
   Verify,
   ExportWallet(ExportScreen),
 }
@@ -80,8 +87,28 @@ pub enum Msg {
   KeyUp(KeyType),
 }
 
+impl defmt::Format for Msg {
+  fn format(&self, f: defmt::Formatter) {
+    match self {
+      Msg::Navigate(screen) => defmt::write!(f, "Msg::Navigate({})", defmt::Debug2Format(&screen)),
+      Msg::KeyUp(key) => defmt::write!(f, "Msg::KeyUp({})", defmt::Debug2Format(&key)),
+    }
+  }
+}
+
 #[derive(PartialEq)]
 pub enum Cmd {
   None,
   UpdateAfter(u64, Msg),
+  InitSD,
+}
+
+impl defmt::Format for Cmd {
+  fn format(&self, f: defmt::Formatter) {
+    match self {
+      Cmd::None => defmt::write!(f, "Cmd::None"),
+      Cmd::InitSD => defmt::write!(f, "Cmd::InitSD"),
+      Cmd::UpdateAfter(time, msg) => defmt::write!(f, "Cmd::UpdateAfter({}, {})", time, msg),
+    }
+  }
 }
