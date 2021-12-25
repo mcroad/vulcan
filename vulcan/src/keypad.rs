@@ -41,7 +41,7 @@ impl KeypadRead for Keys {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Key {
   A,
   B,
@@ -142,7 +142,7 @@ impl defmt::Format for Key {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NumberKey {
   Zero,
   One,
@@ -195,7 +195,7 @@ impl defmt::Format for NumberKey {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NavigationKey {
   Back,
   Forward,

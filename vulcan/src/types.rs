@@ -24,7 +24,7 @@ pub enum KeypadMode {
   Navigation,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum KeyType {
   Number(NumberKey),
   Text(Key),
@@ -74,12 +74,13 @@ pub enum Screen {
   ExportWallet(ExportScreen),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Msg {
   Navigate(Screen),
   KeyUp(KeyType),
 }
 
+#[derive(PartialEq)]
 pub enum Cmd {
   None,
   UpdateAfter(u64, Msg),
