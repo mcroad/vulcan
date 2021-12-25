@@ -18,43 +18,53 @@ fn go_home(state: &mut Model) {
   state.selected_item = 0;
 }
 
-pub fn update(state: &mut Model, msg: Msg) -> Cmd {
-  if state.screen == Screen::Splash {
-    match msg {
-      Msg::Navigate(screen) => {
-        state.screen = screen;
+fn splash(state: &mut Model, msg: Msg) -> Cmd {
+  match msg {
+    Msg::Navigate(screen) => {
+      state.screen = screen;
 
-        match screen {
-          Screen::Splash => {
-            return Cmd::UpdateAfter(3000, Msg::Navigate(Screen::Home));
-          }
-          _ => {}
+      match screen {
+        Screen::Splash => {
+          return Cmd::UpdateAfter(2000, Msg::Navigate(Screen::Home));
         }
+        _ => {}
       }
-      Msg::KeyUp(key_type) => match key_type {
-        KeyType::Text(key) => match key {
-          Key::Back => {
-            let len = state.msg.len();
-            if len > 0 {
-              state.msg.truncate(len - 1);
-            }
+    }
+    Msg::KeyUp(key_type) => match key_type {
+      KeyType::Text(key) => match key {
+        Key::Back => {
+          let len = state.msg.len();
+          if len > 0 {
+            state.msg.truncate(len - 1);
           }
-          Key::Forward => {}
-          _ => {
-            state.msg.push_str(key.to_string()).ok();
-            defmt::info!("key {}", key);
-          }
-        },
-        KeyType::Navigation(key) => match key {
-          NavigationKey::Up => go_up(state),
-          NavigationKey::Down => go_down(state, 4),
-          _ => {}
-        },
+        }
+        Key::Forward => {}
+        _ => {
+          state.msg.push_str(key.to_string()).ok();
+          defmt::info!("key {}", key);
+        }
+      },
+      KeyType::Navigation(key) => match key {
+        NavigationKey::Up => go_up(state),
+        NavigationKey::Down => go_down(state, 4),
         _ => {}
       },
+      _ => {}
+    },
+  }
+
+  return Cmd::None;
+}
+
+pub fn update(state: &mut Model, msg: Msg) -> Cmd {
+  match state.screen {
+    Screen::Splash => {
+      let cmd = splash(state, msg);
+      if cmd != Cmd::None {
+        return cmd;
+      }
     }
-  } else if state.screen == Screen::Home {
-    match msg {
+    Screen::Home => match msg {
       Msg::KeyUp(key_type) => match key_type {
         KeyType::Navigation(key) => match key {
           NavigationKey::Up => go_up(state),
@@ -82,9 +92,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
         _ => {}
       },
       _ => {}
-    }
-  } else if state.screen == Screen::Create {
-    match msg {
+    },
+    Screen::Create => match msg {
       Msg::KeyUp(key_type) => match key_type {
         KeyType::Navigation(key) => match key {
           NavigationKey::Back => go_home(state),
@@ -93,9 +102,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
         _ => {}
       },
       _ => {}
-    }
-  } else if state.screen == Screen::Sign {
-    match msg {
+    },
+    Screen::Sign => match msg {
       Msg::KeyUp(key_type) => match key_type {
         KeyType::Navigation(key) => match key {
           NavigationKey::Back => go_home(state),
@@ -104,9 +112,8 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
         _ => {}
       },
       _ => {}
-    }
-  } else if state.screen == Screen::Verify {
-    match msg {
+    },
+    Screen::Verify => match msg {
       Msg::KeyUp(key_type) => match key_type {
         KeyType::Navigation(key) => match key {
           NavigationKey::Back => go_home(state),
@@ -115,43 +122,44 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
         _ => {}
       },
       _ => {}
-    }
-  } else if state.screen == Screen::ExportWallet(ExportScreen::Menu) {
-    match msg {
-      Msg::KeyUp(key_type) => match key_type {
-        KeyType::Navigation(key) => match key {
-          NavigationKey::Up => go_up(state),
-          NavigationKey::Down => go_down(state, 3),
-          NavigationKey::Back => go_home(state),
-          NavigationKey::Forward => {
-            match state.selected_item {
-              0 => {
-                state.screen = Screen::ExportWallet(ExportScreen::SeedQR);
+    },
+    Screen::ExportWallet(screen) => match screen {
+      ExportScreen::Menu => match msg {
+        Msg::KeyUp(key_type) => match key_type {
+          KeyType::Navigation(key) => match key {
+            NavigationKey::Up => go_up(state),
+            NavigationKey::Down => go_down(state, 3),
+            NavigationKey::Back => go_home(state),
+            NavigationKey::Forward => {
+              match state.selected_item {
+                0 => {
+                  state.screen = Screen::ExportWallet(ExportScreen::SeedQR);
+                }
+                _ => {}
               }
-              _ => {}
+              state.selected_item = 0;
             }
-            state.selected_item = 0;
-          }
+            _ => {}
+          },
+          _ => {}
+        },
+        _ => {}
+      },
+      ExportScreen::SeedQR => match msg {
+        Msg::KeyUp(key_type) => match key_type {
+          KeyType::Navigation(key) => match key {
+            NavigationKey::Back => {
+              state.screen = Screen::ExportWallet(ExportScreen::Menu);
+              state.selected_item = 0;
+            }
+            _ => {}
+          },
           _ => {}
         },
         _ => {}
       },
       _ => {}
-    }
-  } else if state.screen == Screen::ExportWallet(ExportScreen::SeedQR) {
-    match msg {
-      Msg::KeyUp(key_type) => match key_type {
-        KeyType::Navigation(key) => match key {
-          NavigationKey::Back => {
-            state.screen = Screen::ExportWallet(ExportScreen::Menu);
-            state.selected_item = 0;
-          }
-          _ => {}
-        },
-        _ => {}
-      },
-      _ => {}
-    }
+    },
   }
 
   Cmd::None
