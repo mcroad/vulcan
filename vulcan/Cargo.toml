@@ -30,8 +30,8 @@ embedded-layout = "0.2.0"
 keypad2 = "0.1.1"
 asm-delay = "0.9.0"
 embedded-sdmmc = "0.3.0"
-qr_code = { path = "../../qr_code", default-features = false }
 cortex-m-rt = "0.7.1"
+qrcodegen = { path = "../../QR-Code-generator/rust-no-heap" }
 
 [features]
 # set logging levels here

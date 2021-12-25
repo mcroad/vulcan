@@ -26,7 +26,7 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
 
         match screen {
           Screen::Splash => {
-            return Cmd::UpdateAfter(4000, Msg::Navigate(Screen::Home));
+            return Cmd::UpdateAfter(3000, Msg::Navigate(Screen::Home));
           }
           _ => {}
         }
