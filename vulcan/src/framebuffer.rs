@@ -48,14 +48,18 @@ impl Framebuffer {
   }
 
   fn set_pixel(&mut self, position: Point, color: ViewColor) {
-    let (x, y) = (position.x as usize, position.y as usize);
+    let Point { x, y } = position;
 
     // renders mirrored screen. not sure why
-    // let index = x * WIDTH + y;
+    // let index = x * (WIDTH as i32) + y;
     // renders correct screen
-    let index = y * WIDTH + x;
+    let index = y * (WIDTH as i32) + x;
 
-    self.buffer[index] = color;
+    if index >= 0 && index < (SIZE as i32) {
+      self.buffer[index as usize] = color;
+    } else {
+      defmt::error!("Drawing out of bounds. x: {} y: {} index: {}", x, y, index);
+    }
   }
 }
 
