@@ -83,7 +83,7 @@ mod app {
   #[init]
   fn init(ctx: init::Context) -> (Shared, Local, init::Monotonics) {
     unsafe {
-      super::ALLOCATOR.init(cortex_m_rt::heap_start() as usize, 1024);
+      super::ALLOCATOR.init(cortex_m_rt::heap_start() as usize, 512);
     };
 
     defmt::info!("INIT");
