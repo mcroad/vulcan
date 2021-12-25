@@ -1,6 +1,6 @@
 use crate::{
   keypad::{Key, NavigationKey},
-  types::{Cmd, ExportScreen, KeyType, Model, Msg, Screen},
+  types::{Cmd, ExportScreen, KeyType, Model, Msg, Screen, SignScreen},
 };
 
 fn go_up(state: &mut Model) {
@@ -57,7 +57,7 @@ fn splash(state: &mut Model, msg: Msg) -> Cmd {
 }
 
 pub fn update(state: &mut Model, msg: Msg) -> Cmd {
-  match state.screen {
+  match &state.screen {
     Screen::Splash => {
       let cmd = splash(state, msg);
       if cmd != Cmd::None {
@@ -75,7 +75,7 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
                 state.screen = Screen::Create;
               }
               1 => {
-                state.screen = Screen::Sign;
+                state.screen = Screen::Sign(SignScreen::Menu);
               }
               2 => {
                 state.screen = Screen::Verify;
@@ -103,10 +103,53 @@ pub fn update(state: &mut Model, msg: Msg) -> Cmd {
       },
       _ => {}
     },
-    Screen::Sign => match msg {
-      Msg::KeyUp(key_type) => match key_type {
-        KeyType::Navigation(key) => match key {
-          NavigationKey::Back => go_home(state),
+    Screen::Sign(screen) => match screen {
+      SignScreen::Menu => match msg {
+        Msg::KeyUp(key_type) => match key_type {
+          KeyType::Navigation(key) => match key {
+            NavigationKey::Up => go_up(state),
+            NavigationKey::Down => go_down(state, 2),
+            NavigationKey::Back => go_home(state),
+            NavigationKey::Forward => {
+              match state.selected_item {
+                0 => {
+                  state.screen = Screen::Sign(SignScreen::FromQR);
+                }
+                1 => {
+                  state.screen = Screen::Sign(SignScreen::FromFile);
+                  return Cmd::InitSD;
+                }
+                _ => {}
+              }
+            }
+            _ => {}
+          },
+          _ => {}
+        },
+        _ => {}
+      },
+      SignScreen::FromQR => match msg {
+        Msg::KeyUp(key_type) => match key_type {
+          KeyType::Navigation(key) => match key {
+            NavigationKey::Back => {
+              state.screen = Screen::Sign(SignScreen::Menu);
+              state.selected_item = 0;
+            }
+            _ => {}
+          },
+          _ => {}
+        },
+        _ => {}
+      },
+      SignScreen::FromFile => match msg {
+        Msg::KeyUp(key_type) => match key_type {
+          KeyType::Navigation(key) => match key {
+            NavigationKey::Back => {
+              state.screen = Screen::Sign(SignScreen::Menu);
+              state.selected_item = 0;
+            }
+            _ => {}
+          },
           _ => {}
         },
         _ => {}

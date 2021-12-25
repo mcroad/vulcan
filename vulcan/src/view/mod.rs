@@ -22,12 +22,12 @@ pub fn view(
   display: &mut impl DrawTarget<Color = ViewColor, Error = ViewError>,
   state: &Model,
 ) -> ViewResult {
-  return match state.screen {
+  return match &state.screen {
     Screen::Splash => splash(display, state),
     Screen::Home => home(display, state),
     Screen::Create => create_wallet(display, state),
     Screen::Verify => verify_address(display, state),
-    Screen::ExportWallet(export_screen) => export_wallet(display, state, export_screen),
-    Screen::Sign => sign_transaction(display, state),
+    Screen::ExportWallet(screen) => export_wallet(display, state, screen),
+    Screen::Sign(screen) => sign_transaction(display, state, screen),
   };
 }

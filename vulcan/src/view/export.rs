@@ -73,11 +73,11 @@ fn draw_qr(
 pub fn export_wallet(
   display: &mut impl DrawTarget<Color = Rgb565, Error = ViewError>,
   state: &Model,
-  export_screen: ExportScreen,
+  screen: &ExportScreen,
 ) -> ViewResult {
   display.clear(Rgb565::WHITE)?;
 
-  match export_screen {
+  match screen {
     ExportScreen::Menu => {
       let mut top_left =
         draw_nav(display, "Export Wallet")? + Point::new(MARGIN_X as i32, MARGIN_Y as i32);
