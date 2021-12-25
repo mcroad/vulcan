@@ -1,4 +1,4 @@
-use super::util::{draw_button, ViewError, ViewResult};
+use super::util::{draw_button, draw_nav, ViewError, ViewResult, MARGIN_X, MARGIN_Y};
 use crate::{
   types::{ExportScreen, Model},
   view::util::ViewColor,
@@ -79,14 +79,10 @@ pub fn export_wallet(
 
   match export_screen {
     ExportScreen::Menu => {
-      let margin = 10;
-      let space = 10;
+      let mut top_left =
+        draw_nav(display, "Export Wallet")? + Point::new(MARGIN_X as i32, MARGIN_Y as i32);
 
-      let width: u32 =
-        display.bounding_box().bottom_right().unwrap().x as u32 - (margin as u32) * 2;
-
-      let mut top_left = Point::new(margin, space);
-
+      let width: u32 = display.bounding_box().bottom_right().unwrap().x as u32 - MARGIN_X * 2;
       top_left = draw_button(display, &state, &top_left, width, 0, "SeedQR")?;
       top_left = draw_button(display, &state, &top_left, width, 1, "Specter")?;
       draw_button(display, &state, &top_left, width, 2, "Sparrow")?;
