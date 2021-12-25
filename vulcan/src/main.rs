@@ -170,59 +170,59 @@ mod app {
       Keypad::new(rows, cols)
     };
 
-    {
-      // SDMMC1 pins
-      let clk = gpioc.pc12.into_alternate_af12();
-      let cmd = gpiod.pd2.into_alternate_af12();
-      let d0 = gpioc.pc8.into_alternate_af12();
-      let d1 = gpioc.pc9.into_alternate_af12();
-      let d2 = gpioc.pc10.into_alternate_af12();
-      let d3 = gpioc.pc11.into_alternate_af12();
+    // {
+    //   // SDMMC1 pins
+    //   let clk = gpioc.pc12.into_alternate_af12();
+    //   let cmd = gpiod.pd2.into_alternate_af12();
+    //   let d0 = gpioc.pc8.into_alternate_af12();
+    //   let d1 = gpioc.pc9.into_alternate_af12();
+    //   let d2 = gpioc.pc10.into_alternate_af12();
+    //   let d3 = gpioc.pc11.into_alternate_af12();
 
-      let mut sd = ctx.device.SDMMC1.sdmmc(
-        (clk, cmd, d0, d1, d2, d3),
-        ccdr.peripheral.SDMMC1,
-        &ccdr.clocks,
-      );
+    //   let mut sd = ctx.device.SDMMC1.sdmmc(
+    //     (clk, cmd, d0, d1, d2, d3),
+    //     ccdr.peripheral.SDMMC1,
+    //     &ccdr.clocks,
+    //   );
 
-      // On most development boards this can be increased up to 50MHz. We choose a
-      // lower frequency here so that it should work even with flying leads
-      // connected to a SD card breakout.
-      match sd.init_card(2.mhz()) {
-        Ok(_) => {
-          let size = sd.card().unwrap().size();
-          defmt::info!("SD Size: {}", size);
+    //   // On most development boards this can be increased up to 50MHz. We choose a
+    //   // lower frequency here so that it should work even with flying leads
+    //   // connected to a SD card breakout.
+    //   match sd.init_card(2.mhz()) {
+    //     Ok(_) => {
+    //       let size = sd.card().unwrap().size();
+    //       defmt::info!("SD Size: {}", size);
 
-          struct Clock;
+    //       struct Clock;
 
-          impl TimeSource for Clock {
-            fn get_timestamp(&self) -> Timestamp {
-              Timestamp {
-                year_since_1970: 0,
-                zero_indexed_month: 0,
-                zero_indexed_day: 0,
-                hours: 0,
-                minutes: 0,
-                seconds: 0,
-              }
-            }
-          }
+    //       impl TimeSource for Clock {
+    //         fn get_timestamp(&self) -> Timestamp {
+    //           Timestamp {
+    //             year_since_1970: 0,
+    //             zero_indexed_month: 0,
+    //             zero_indexed_day: 0,
+    //             hours: 0,
+    //             minutes: 0,
+    //             seconds: 0,
+    //           }
+    //         }
+    //       }
 
-          let mut sd_fatfs = Controller::new(sd.sdmmc_block_device(), Clock);
-          let sd_fatfs_volume = sd_fatfs.get_volume(VolumeIdx(0)).unwrap();
-          let sd_fatfs_root_dir = sd_fatfs.open_root_dir(&sd_fatfs_volume).unwrap();
-          sd_fatfs
-            .iterate_dir(&sd_fatfs_volume, &sd_fatfs_root_dir, |entry| {
-              defmt::info!("{:?}", defmt::Debug2Format(&entry.name));
-            })
-            .unwrap();
-          sd_fatfs.close_dir(&sd_fatfs_volume, sd_fatfs_root_dir);
-        }
-        Err(err) => {
-          defmt::info!("{:?}", defmt::Debug2Format(&err));
-        }
-      }
-    };
+    //       let mut sd_fatfs = Controller::new(sd.sdmmc_block_device(), Clock);
+    //       let sd_fatfs_volume = sd_fatfs.get_volume(VolumeIdx(0)).unwrap();
+    //       let sd_fatfs_root_dir = sd_fatfs.open_root_dir(&sd_fatfs_volume).unwrap();
+    //       sd_fatfs
+    //         .iterate_dir(&sd_fatfs_volume, &sd_fatfs_root_dir, |entry| {
+    //           defmt::info!("{:?}", defmt::Debug2Format(&entry.name));
+    //         })
+    //         .unwrap();
+    //       sd_fatfs.close_dir(&sd_fatfs_volume, sd_fatfs_root_dir);
+    //     }
+    //     Err(err) => {
+    //       defmt::info!("{:?}", defmt::Debug2Format(&err));
+    //     }
+    //   }
+    // };
 
     defmt::info!("INIT DONE");
 
