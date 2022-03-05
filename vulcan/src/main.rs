@@ -50,12 +50,14 @@ mod app {
   use crate::types::{BacklightLED, Cmd, Display, KeyType, KeypadMode, Model, Msg, Screen};
   use crate::update::update;
   use crate::view::view;
+  use alloc::vec::Vec;
   use asm_delay::{bitrate, AsmDelay};
   use display_interface_spi::SPIInterface;
   use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
   use embedded_hal::spi::{Mode, Phase, Polarity};
   use embedded_hal::{digital::v2::OutputPin, prelude::*};
-  use embedded_sdmmc::{Controller, TimeSource, Timestamp, VolumeIdx};
+  use embedded_sdmmc::{Controller, File, TimeSource, Timestamp, VolumeIdx};
+  use fatfs::{FileSystem, FsOptions};
   use keypad2::Keypad;
   use st7789::{Orientation, TearingEffect, ST7789};
   use stm32h7xx_hal::device::SDMMC1;
@@ -204,6 +206,9 @@ mod app {
         &ccdr.clocks,
       );
 
+      // let img_file = File::open("fat.img").unwrap();
+      // let fs = fatfs::FileSystem::new(img_file, fatfs::FsOptions::new()).unwrap();
+
       // On most development boards this can be increased up to 50MHz. We choose a
       // lower frequency here so that it should work even with flying leads
       // connected to a SD card breakout.
@@ -273,10 +278,21 @@ mod app {
         Cmd::InitSD => {
           if let Some(sd) = sd_fatfs {
             let sd: &mut Controller<SdmmcBlockDevice<Sdmmc<SDMMC1>>, SdClock> = sd;
-            let volume = sd.get_volume(VolumeIdx(0)).unwrap();
+            let mut volume = sd.get_volume(VolumeIdx(0)).unwrap();
             let root_dir = sd.open_root_dir(&volume).unwrap();
+
+
+            // let file = sd
+            //   .open_file_in_dir(
+            //     &mut volume,
+            //     &root_dir,
+            //     "BASE64~1.PSB",
+            //     embedded_sdmmc::Mode::ReadOnly,
+            //   )
+            //   .unwrap();
+
             sd.iterate_dir(&volume, &root_dir, |entry| {
-              defmt::info!("{:?}", defmt::Display2Format(&entry.name));
+              defmt::info!("{:?}", defmt::Debug2Format(&entry));
             })
             .unwrap();
 
