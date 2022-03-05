@@ -31,7 +31,7 @@ keypad2 = "0.1.1"
 asm-delay = "0.9.0"
 embedded-sdmmc = "0.3.0"
 cortex-m-rt = "0.7.1"
-qrcodegen = { path = "../../QR-Code-generator/rust-no-heap" }
+embedded-qr = { git = "https://github.com/mcroad/embedded-qr" }
 
 [features]
 # set logging levels here

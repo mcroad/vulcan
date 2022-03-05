@@ -6,7 +6,7 @@ use crate::{
 use alloc::vec;
 use core::mem::size_of;
 use embedded_graphics::{pixelcolor::Rgb565, prelude::*};
-use qrcodegen::{QrCode, QrCodeEcc, Version};
+use embedded_qr::{QrCode, QrCodeEcc, QrDrawable, Version};
 
 fn draw_qr(
   target: &mut impl DrawTarget<Color = Rgb565, Error = ViewError>,
@@ -109,7 +109,10 @@ pub fn export_wallet(
       // Optional, because tempbuffer is only needed during encode_text()
       core::mem::drop(tempbuffer);
 
-      draw_qr(display, &qr)?;
+      let mut buff = [false; 240 * 240];
+      let mut drawable: QrDrawable<'_, '_, Rgb565> = QrDrawable::new(&qr, &mut buff);
+      drawable.prepare(240).unwrap();
+      drawable.draw(display)?;
 
       core::mem::drop(outbuffer);
     }

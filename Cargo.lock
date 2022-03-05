@@ -553,6 +553,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-qr"
+version = "1.7.0"
+source = "git+https://github.com/mcroad/embedded-qr#c6e01dcaf5a7d628d6a43210e4aa72a9778f742d"
+dependencies = [
+ "embedded-graphics",
+]
+
+[[package]]
 name = "embedded-sdmmc"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -928,10 +936,6 @@ checksum = "2f84e92c0f7c9d58328b85a78557813e4bd845130db68d7184635344399423b1"
 dependencies = [
  "unicode-xid",
 ]
-
-[[package]]
-name = "qrcodegen"
-version = "1.7.0"
 
 [[package]]
 name = "quote"
@@ -1412,12 +1416,12 @@ dependencies = [
  "embedded-graphics",
  "embedded-hal",
  "embedded-layout",
+ "embedded-qr",
  "embedded-sdmmc",
  "heapless",
  "keypad2",
  "nb 1.0.0",
  "panic-probe",
- "qrcodegen",
  "rtic-monotonic",
  "st7789",
  "stm32h7xx-hal",
