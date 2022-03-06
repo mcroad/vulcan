@@ -1,21 +1,25 @@
-FROM rust:1.55
+# install rust
+# https://rustup.rs/
+FROM rustlang/rust:nightly
 
 WORKDIR /usr/src/vulcan
 COPY . .
 
-# stm32f411 target
+# add the compilation target
 RUN rustup target add thumbv7em-none-eabihf
 
-# cortex-m linker
+# install the cortex-m linker
 RUN cargo install flip-link
 
-# cargo-flash dependencies
+# install cargo-flash dependencies
 RUN apt update
-RUN apt install -y pkg-config libusb-1.0-0-dev libftdi1-dev
+RUN apt install -y pkg-config libusb-1.0-0-dev libftdi1-dev libudev-dev
+
+# install cargo-flash
 RUN cargo install cargo-flash
 
 # build release version
-RUN cargo build --release --bin vulcan --target thumbv7em-none-eabihf
+RUN cargo build -p vulcan --release --target thumbv7em-none-eabihf
 
-# flash to chip
-CMD cargo flash --release --bin vulcan --chip STM32H743VITx
+# flash release to chip
+CMD cargo flash -p vulcan --release --target thumbv7em-none-eabihf --chip STM32H743VITx
