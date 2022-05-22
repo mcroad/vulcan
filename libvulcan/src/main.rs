@@ -152,7 +152,7 @@ fn get_wallet(
   root: &bip32::ExtendedPrivKey,
   path: &bip32::DerivationPath,
   network: Network,
-) -> Result<Wallet<(), MemoryDatabase>, bdk::Error> {
+) -> Result<Wallet<MemoryDatabase>, bdk::Error> {
   let external = {
     let send_path = path.child(bip32::ChildNumber::from_normal_idx(0)?);
     let desc_key = root.into_descriptor_key(None, send_path)?;
@@ -166,7 +166,7 @@ fn get_wallet(
   };
   println!("change:  {}", internal.0);
 
-  return Wallet::new_offline(external, Some(internal), network, MemoryDatabase::default());
+  return Wallet::new(external, Some(internal), network, MemoryDatabase::default());
 }
 
 /// [0] Version
@@ -330,6 +330,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   } else {
     println!("Error: could not sign transaction");
   }
+
+  println!("");
 
   let seed= "136400980811079503490561095703230934105802751813017212440282184807481683015201310078178605500063";
   // fits in a 29x29 qr code

@@ -4,5 +4,5 @@ edition = "2018"
 version = "0.1.0"
 
 [dependencies]
-bdk = { version = "0.16.1", features = ["rpc", "keys-bip39"] }
+bdk = { version = "0.18.0", features = ["keys-bip39"] }
 xyzpub = "0.2.1"
