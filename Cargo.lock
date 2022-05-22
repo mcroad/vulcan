@@ -161,8 +161,7 @@ checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 [[package]]
 name = "bip39"
 version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9e89470017230c38e52b82b3ee3f530db1856ba1d434e3a67a3456a8a8dec5f"
+source = "git+https://github.com/rust-bitcoin/rust-bip39?rev=da090d223ad7301dcce62fa68c457edf94e8c81f#da090d223ad7301dcce62fa68c457edf94e8c81f"
 dependencies = [
  "bitcoin_hashes 0.9.7",
  "rand_core 0.4.2",

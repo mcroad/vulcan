@@ -1,6 +1,9 @@
 [workspace]
 members = ["vulcan", "libvulcan"]
 
+[patch.crates-io]
+bip39 = { git = "https://github.com/rust-bitcoin/rust-bip39", rev = "da090d223ad7301dcce62fa68c457edf94e8c81f" }
+
 [profile.dev]
 codegen-units = 1
 debug = 2

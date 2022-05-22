@@ -14,6 +14,7 @@ use bdk::{
   },
   SignOptions, Wallet,
 };
+use bip39 as bip39r;
 use std::str::FromStr;
 use xyzpub::{convert_version, Version};
 
@@ -173,7 +174,7 @@ fn get_wallet(
 /// [2] Word count
 /// [3:3 + word_count * 4] mnemonic seed indeces as 4-digit numbers
 /// [3 + word_count * 4:] the rest is interpreted as 3-digits per unicode char. makes up the path after the "m/"
-fn parse_extended_seedqr(qr: &str) -> Result<(Vec<u16>, bip32::DerivationPath, ScriptType), ()> {
+fn parse_extended_seedqr(qr: &str) -> Result<(Vec<&str>, bip32::DerivationPath, ScriptType), ()> {
   if qr.len() > 127 {
     // seedqr must be less <= 127 digits to fit in a 29x29 QRCode
     return Err(());
@@ -214,11 +215,13 @@ fn parse_extended_seedqr(qr: &str) -> Result<(Vec<u16>, bip32::DerivationPath, S
   // parse mnemonic phrase
   let end = count * 4;
   let indeces = &qr[0..end];
-  let mut words: Vec<u16> = vec![];
+  let mut words: Vec<&str> = vec![];
+  let english_words = bip39r::Language::English.word_list();
   for i in 0..count {
     let start = i * 4;
     let end = start + 4;
-    words.push(indeces[start..end].parse::<u16>().unwrap());
+    let word_index = indeces[start..end].parse::<usize>().unwrap();
+    words.push(english_words[word_index]);
   }
 
   // parse path as each char as 3-digit unicode
@@ -330,6 +333,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let seed= "136400980811079503490561095703230934105802751813017212440282184807481683015201310078178605500063";
   // fits in a 29x29 qr code
+  // https://twitter.com/KeithMukai/status/1420906150036484101
   let serialized_seedqr = ["014", seed, "056052104047049104047048104"].join("");
   println!("serialized:   {}", serialized_seedqr);
   println!(
